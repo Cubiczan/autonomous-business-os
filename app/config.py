@@ -55,6 +55,12 @@ class Settings(BaseSettings):
     sentry_dsn: str | None = Field(default=None, repr=False)
     otel_exporter_otlp_endpoint: str | None = None
 
+    llama_cloud_api_key: str | None = Field(default=None, repr=False)
+    llama_cloud_knowledge_pipeline_id: str | None = None
+    llama_cloud_dense_top_k: int = 12
+    llama_cloud_sparse_top_k: int = 12
+    llama_cloud_rerank_top_n: int = 5
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     @property
