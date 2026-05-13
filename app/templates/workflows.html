@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <h1>Workflows</h1>
+  <p>Every orchestrated workflow with status, attempts, and latest result.</p>
+</section>
+<table>
+  <thead>
+    <tr><th>Title</th><th>Kind</th><th>Status</th><th>Attempts</th><th>Created</th></tr>
+  </thead>
+  <tbody>
+    {% for workflow in workflows %}
+    <tr>
+      <td>{{ workflow.title }}</td>
+      <td>{{ workflow.kind }}</td>
+      <td><span class="badge">{{ workflow.status.value }}</span></td>
+      <td>{{ workflow.attempts }}/{{ workflow.max_attempts }}</td>
+      <td>{{ workflow.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+    </tr>
+    <tr class="detail-row">
+      <td colspan="5"><pre>{{ workflow.result }}</pre></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">No workflows yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <h1>Audit Log</h1>
+  <p>Immutable-style trace of orchestration, tool calls, approvals, and escalations.</p>
+</section>
+<table>
+  <thead>
+    <tr><th>Time</th><th>Action</th><th>Actor</th><th>Message</th></tr>
+  </thead>
+  <tbody>
+    {% for log in logs %}
+    <tr>
+      <td>{{ log.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+      <td><span class="badge">{{ log.action.value }}</span></td>
+      <td>{{ log.actor }}</td>
+      <td>{{ log.message }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4">No audit logs yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

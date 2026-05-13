@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <h1>Operations Dashboard</h1>
+  <p>Live view of autonomous workflows, approvals, escalations, and audit health.</p>
+</section>
+
+<section class="stats">
+  {% for status, count in status_counts.items() %}
+  <article>
+    <span>{{ status.value }}</span>
+    <strong>{{ count }}</strong>
+  </article>
+  {% else %}
+  <article>
+    <span>workflows</span>
+    <strong>0</strong>
+  </article>
+  {% endfor %}
+</section>
+
+<section class="grid">
+  <div>
+    <div class="section-title">
+      <h2>Recent Workflows</h2>
+      <a href="/admin/workflows">View all</a>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Title</th><th>Kind</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for workflow in workflows %}
+        <tr>
+          <td>{{ workflow.title }}</td>
+          <td>{{ workflow.kind }}</td>
+          <td><span class="badge">{{ workflow.status.value }}</span></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3">No workflows yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div>
+    <div class="section-title">
+      <h2>Open Approvals</h2>
+      <a href="/admin/approvals">Review</a>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Approval</th><th>Reason</th></tr>
+      </thead>
+      <tbody>
+        {% for approval in approvals %}
+        <tr>
+          <td>{{ approval.title }}</td>
+          <td>{{ approval.reason }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="2">No approvals waiting.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">
+    <h2>Escalations</h2>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Severity</th><th>Owner</th><th>Reason</th><th>Created</th></tr>
+    </thead>
+    <tbody>
+      {% for escalation in escalations %}
+      <tr>
+        <td><span class="badge">{{ escalation.severity }}</span></td>
+        <td>{{ escalation.owner }}</td>
+        <td>{{ escalation.reason }}</td>
+        <td>{{ escalation.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4">No active escalations.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

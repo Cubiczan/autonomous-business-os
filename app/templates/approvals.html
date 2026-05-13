@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head">
+  <h1>Human Approvals</h1>
+  <p>Review high-impact actions before agents send messages, follow up on payments, or change records.</p>
+</section>
+<table>
+  <thead>
+    <tr><th>Title</th><th>Status</th><th>Reason</th><th>Decision</th></tr>
+  </thead>
+  <tbody>
+    {% for approval in approvals %}
+    <tr>
+      <td>{{ approval.title }}</td>
+      <td><span class="badge">{{ approval.status.value }}</span></td>
+      <td>{{ approval.reason }}</td>
+      <td>
+        {% if approval.status.value == "open" %}
+        <form method="post" action="/admin/approvals/{{ approval.id }}/decision" class="approval-form">
+          <input name="decided_by" placeholder="Reviewer" required>
+          <input name="decision_note" placeholder="Note">
+          <button name="status" value="approved">Approve</button>
+          <button name="status" value="rejected" class="secondary">Reject</button>
+        </form>
+        {% else %}
+        {{ approval.decided_by }} {{ approval.decision_note or "" }}
+        {% endif %}
+      </td>
+    </tr>
+    <tr class="detail-row">
+      <td colspan="4"><pre>{{ approval.proposed_action }}</pre></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4">No approvals found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

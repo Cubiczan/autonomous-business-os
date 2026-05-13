@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title or "Business OS" }}</title>
+    <link rel="stylesheet" href="/static/admin.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <strong>Business OS</strong>
+        <span>Autonomous operations control panel</span>
+      </div>
+      <nav>
+        <a href="/admin">Dashboard</a>
+        <a href="/admin/workflows">Workflows</a>
+        <a href="/admin/approvals">Approvals</a>
+        <a href="/admin/audit">Audit</a>
+        <a href="/docs">API</a>
+      </nav>
+    </header>
+    <main>
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>
