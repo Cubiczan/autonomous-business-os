@@ -9,6 +9,7 @@ pydantic==2.12.5
 pydantic-settings==2.13.1
 python-dotenv==1.2.2
 python-multipart==0.0.26
+psycopg2-binary==2.9.12
 sqlalchemy==2.0.48
 structlog==24.4.0
 tenacity==8.5.0
