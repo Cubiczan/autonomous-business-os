@@ -143,6 +143,8 @@ Mission Control includes:
 ## Security And Approval Layer
 
 Security is implemented in `app/services/guardrails.py`.
+Evidence packets are implemented in `app/services/evidence.py` and persisted as
+`evidence_packets`.
 
 Non-negotiable policies:
 
@@ -151,6 +153,9 @@ Non-negotiable policies:
 - External actions are persisted before execution.
 - Human approvals update the corresponding external-action status.
 - Tool calls pass through a circuit breaker before execution.
+- External actions produce VGA-style evidence packets that bind intent, risk reasons,
+  payload hash, workflow metadata, approval id, policy mode, and attribution before any
+  execution step.
 - Prompt-injection markers in untrusted content create security events.
 - Pause and kill endpoints stop departments immediately:
 
@@ -164,6 +169,12 @@ Agents are assigned trust levels:
 - `autonomous`: can perform internal, reversible work with audit logging.
 - `supervised`: can run workflows but escalates ambiguous or high-impact steps.
 - `approval_required`: cannot execute outbound or external side-effect actions directly.
+
+Attribution: the evidence-packet and fail-close governance pattern is adapted from
+Georgios Fradelos, PhD, *Verifiable Governance Architecture (VGA) for Organisations and
+Teams with Human and AI Employees* (Geneva, January 9, 2026; local source
+`AI Governance papers/ssrn-6306840.pdf`) and *Finance-Grade Assurance for Agentic AI*
+(Geneva, January 11, 2026; local source `AI Governance papers/ssrn-6306980.pdf`).
 
 ## Deployment Notes
 

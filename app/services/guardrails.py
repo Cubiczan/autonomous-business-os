@@ -19,6 +19,7 @@ from app.models import (
 )
 from app.services.approval import ApprovalService
 from app.services.audit import AuditService
+from app.services.evidence import EvidencePacketService
 
 
 OUTBOUND_MARKERS = {
@@ -77,6 +78,7 @@ class GuardrailService:
         self.session = session
         self.audit = AuditService(session)
         self.approvals = ApprovalService(session)
+        self.evidence = EvidencePacketService(session)
         self.prompt_guard = PromptInjectionGuard()
 
     def classify_action(self, action_type: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -150,6 +152,12 @@ class GuardrailService:
             )
             external_action.approval_id = approval.id
             self.session.commit()
+        packet = self.evidence.record_external_action_packet(
+            external_action=external_action,
+            classification=classification,
+            workflow=workflow,
+            agent=agent,
+        )
         self.audit.record(
             AuditAction.external_action_requested,
             f"External action proposed: {summary}",
@@ -160,11 +168,13 @@ class GuardrailService:
                 "risk_level": classification["risk_level"],
                 "requires_approval": classification["requires_approval"],
                 "approval_id": approval.id if approval else None,
+                "evidence_packet_id": packet.id,
             },
         )
         return {
             "external_action_id": external_action.id,
             "approval_id": approval.id if approval else None,
+            "evidence_packet_id": packet.id,
             "status": external_action.status.value,
             **classification,
         }

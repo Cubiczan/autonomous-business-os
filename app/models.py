@@ -106,6 +106,7 @@ class AuditAction(str, enum.Enum):
     skill_assigned = "skill_assigned"
     external_action_requested = "external_action_requested"
     external_action_blocked = "external_action_blocked"
+    evidence_packet_recorded = "evidence_packet_recorded"
     security_event_created = "security_event_created"
     circuit_breaker_opened = "circuit_breaker_opened"
 
@@ -335,6 +336,23 @@ class ExternalAction(Base):
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     executed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class EvidencePacket(Base):
+    __tablename__ = "evidence_packets"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workflow_id: Mapped[str | None] = mapped_column(String(36), index=True, nullable=True)
+    external_action_id: Mapped[str | None] = mapped_column(String(36), index=True, nullable=True)
+    agent_id: Mapped[str | None] = mapped_column(String(36), index=True, nullable=True)
+    packet_type: Mapped[str] = mapped_column(String(120), index=True)
+    intent: Mapped[str] = mapped_column(Text)
+    policy_version: Mapped[str] = mapped_column(String(80), default="vga-2026-01")
+    context_hash: Mapped[str] = mapped_column(String(64), index=True)
+    status: Mapped[str] = mapped_column(String(80), default="recorded", index=True)
+    artifacts: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    attribution: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class SecurityEvent(Base):

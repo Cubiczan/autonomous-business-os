@@ -8,6 +8,7 @@ from app.models import (
     AgentInstance,
     ApprovalStatus,
     Department,
+    EvidencePacket,
     ExternalAction,
     HumanApproval,
     SecurityEvent,
@@ -84,6 +85,9 @@ def mission_board(session: Session = Depends(get_session)) -> dict:
     external_actions = session.scalars(
         select(ExternalAction).order_by(desc(ExternalAction.created_at)).limit(50)
     ).all()
+    evidence_packets = session.scalars(
+        select(EvidencePacket).order_by(desc(EvidencePacket.created_at)).limit(50)
+    ).all()
     alerts = session.scalars(select(SecurityEvent).order_by(desc(SecurityEvent.created_at)).limit(50)).all()
     skills = session.scalars(select(Skill).order_by(Skill.name)).all()
     return {
@@ -145,6 +149,18 @@ def mission_board(session: Session = Depends(get_session)) -> dict:
                 "status": action.status.value,
             }
             for action in external_actions
+        ],
+        "evidence_packets": [
+            {
+                "id": packet.id,
+                "workflow_id": packet.workflow_id,
+                "external_action_id": packet.external_action_id,
+                "packet_type": packet.packet_type,
+                "status": packet.status,
+                "context_hash": packet.context_hash,
+                "created_at": packet.created_at.isoformat(),
+            }
+            for packet in evidence_packets
         ],
         "alert_feed": [
             {

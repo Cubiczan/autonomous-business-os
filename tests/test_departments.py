@@ -4,6 +4,7 @@ from app.agents.orchestrator import MasterOrchestrator
 from app.models import (
     AgentInstance,
     DepartmentSchedule,
+    EvidencePacket,
     ExternalAction,
     HumanApproval,
     Skill,
@@ -65,10 +66,14 @@ def test_department_operation_creates_approval_gated_external_actions(db_session
 
     result = MasterOrchestrator(db_session).run_workflow(workflow)
     actions = db_session.scalars(select(ExternalAction)).all()
+    packets = db_session.scalars(select(EvidencePacket)).all()
     approvals = db_session.scalars(select(HumanApproval)).all()
 
     assert workflow.status == WorkflowStatus.waiting_for_human
     assert len(result["approval_requests"]) == 2
     assert len(actions) == 2
+    assert len(packets) == 2
     assert len(approvals) == 2
     assert all(action.requires_approval for action in actions)
+    assert all(packet.status == "waiting_for_approval" for packet in packets)
+    assert all("Verifiable Governance Architecture" in packet.attribution for packet in packets)
