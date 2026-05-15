@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import Any
 from uuid import uuid4
 
-from sqlalchemy import JSON, DateTime, Enum, Float, ForeignKey, Integer, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, Enum, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -40,6 +40,51 @@ class ApprovalStatus(str, enum.Enum):
     rejected = "rejected"
 
 
+class DepartmentStatus(str, enum.Enum):
+    active = "active"
+    paused = "paused"
+    killed = "killed"
+
+
+class AgentRuntimeStatus(str, enum.Enum):
+    idle = "idle"
+    running = "running"
+    waiting_for_approval = "waiting_for_approval"
+    paused = "paused"
+    error = "error"
+
+
+class TrustLevel(str, enum.Enum):
+    autonomous = "autonomous"
+    supervised = "supervised"
+    approval_required = "approval_required"
+
+
+class SkillScope(str, enum.Enum):
+    company = "company"
+    department = "department"
+    agent = "agent"
+
+
+class SkillStatus(str, enum.Enum):
+    active = "active"
+    disabled = "disabled"
+
+
+class ExternalActionStatus(str, enum.Enum):
+    proposed = "proposed"
+    approved = "approved"
+    rejected = "rejected"
+    executed = "executed"
+    blocked = "blocked"
+
+
+class SecurityEventStatus(str, enum.Enum):
+    open = "open"
+    acknowledged = "acknowledged"
+    resolved = "resolved"
+
+
 class AuditAction(str, enum.Enum):
     workflow_created = "workflow_created"
     workflow_started = "workflow_started"
@@ -52,6 +97,17 @@ class AuditAction(str, enum.Enum):
     approval_updated = "approval_updated"
     escalation_created = "escalation_created"
     integration_called = "integration_called"
+    department_created = "department_created"
+    department_updated = "department_updated"
+    department_paused = "department_paused"
+    department_killed = "department_killed"
+    agent_spawned = "agent_spawned"
+    skill_registered = "skill_registered"
+    skill_assigned = "skill_assigned"
+    external_action_requested = "external_action_requested"
+    external_action_blocked = "external_action_blocked"
+    security_event_created = "security_event_created"
+    circuit_breaker_opened = "circuit_breaker_opened"
 
 
 class Workflow(Base):
@@ -160,3 +216,153 @@ class Lead(Base):
     enrichment: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     outreach: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Department(Base):
+    __tablename__ = "departments"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    name: Mapped[str] = mapped_column(String(255), index=True)
+    department_type: Mapped[str] = mapped_column(String(80), index=True)
+    purpose: Mapped[str] = mapped_column(Text)
+    goals: Mapped[list[str]] = mapped_column(JSON, default=list)
+    operating_rules: Mapped[list[str]] = mapped_column(JSON, default=list)
+    status: Mapped[DepartmentStatus] = mapped_column(
+        Enum(DepartmentStatus), default=DepartmentStatus.active, index=True
+    )
+    health_score: Mapped[float] = mapped_column(Float, default=1.0)
+    revenue_signals: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    last_output: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    agents: Mapped[list["AgentInstance"]] = relationship(back_populates="department")
+    schedules: Mapped[list["DepartmentSchedule"]] = relationship(back_populates="department")
+
+
+class AgentInstance(Base):
+    __tablename__ = "agent_instances"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    department_id: Mapped[str | None] = mapped_column(
+        ForeignKey("departments.id"), index=True, nullable=True
+    )
+    name: Mapped[str] = mapped_column(String(255), index=True)
+    role: Mapped[str] = mapped_column(String(120), index=True)
+    description: Mapped[str] = mapped_column(Text, default="")
+    trust_level: Mapped[TrustLevel] = mapped_column(
+        Enum(TrustLevel), default=TrustLevel.supervised, index=True
+    )
+    status: Mapped[AgentRuntimeStatus] = mapped_column(
+        Enum(AgentRuntimeStatus), default=AgentRuntimeStatus.idle, index=True
+    )
+    tools: Mapped[list[str]] = mapped_column(JSON, default=list)
+    memory_namespace: Mapped[str] = mapped_column(String(255), default="")
+    schedule: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    current_task: Mapped[str | None] = mapped_column(Text, nullable=True)
+    last_output: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    last_heartbeat: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    department: Mapped[Department | None] = relationship(back_populates="agents")
+    skill_assignments: Mapped[list["AgentSkillAssignment"]] = relationship(back_populates="agent")
+
+
+class Skill(Base):
+    __tablename__ = "skills"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    name: Mapped[str] = mapped_column(String(255), index=True)
+    slug: Mapped[str] = mapped_column(String(120), index=True)
+    version: Mapped[str] = mapped_column(String(40), default="1.0.0")
+    description: Mapped[str] = mapped_column(Text, default="")
+    scope: Mapped[SkillScope] = mapped_column(Enum(SkillScope), default=SkillScope.company)
+    department_id: Mapped[str | None] = mapped_column(String(36), index=True, nullable=True)
+    agent_id: Mapped[str | None] = mapped_column(String(36), index=True, nullable=True)
+    manifest: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    status: Mapped[SkillStatus] = mapped_column(Enum(SkillStatus), default=SkillStatus.active)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    assignments: Mapped[list["AgentSkillAssignment"]] = relationship(back_populates="skill")
+
+
+class AgentSkillAssignment(Base):
+    __tablename__ = "agent_skill_assignments"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    agent_id: Mapped[str] = mapped_column(ForeignKey("agent_instances.id"), index=True)
+    skill_id: Mapped[str] = mapped_column(ForeignKey("skills.id"), index=True)
+    assigned_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    agent: Mapped[AgentInstance] = relationship(back_populates="skill_assignments")
+    skill: Mapped[Skill] = relationship(back_populates="assignments")
+
+
+class DepartmentSchedule(Base):
+    __tablename__ = "department_schedules"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    department_id: Mapped[str] = mapped_column(ForeignKey("departments.id"), index=True)
+    name: Mapped[str] = mapped_column(String(255))
+    cadence: Mapped[str] = mapped_column(String(80), default="daily")
+    workflow_kind: Mapped[str] = mapped_column(String(80), default="department_operation")
+    payload_template: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    next_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_run_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    department: Mapped[Department] = relationship(back_populates="schedules")
+
+
+class ExternalAction(Base):
+    __tablename__ = "external_actions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workflow_id: Mapped[str | None] = mapped_column(String(36), index=True, nullable=True)
+    agent_id: Mapped[str | None] = mapped_column(String(36), index=True, nullable=True)
+    action_type: Mapped[str] = mapped_column(String(120), index=True)
+    summary: Mapped[str] = mapped_column(Text)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    risk_level: Mapped[str] = mapped_column(String(40), default="medium")
+    requires_approval: Mapped[bool] = mapped_column(Boolean, default=True)
+    approval_id: Mapped[str | None] = mapped_column(String(36), index=True, nullable=True)
+    status: Mapped[ExternalActionStatus] = mapped_column(
+        Enum(ExternalActionStatus), default=ExternalActionStatus.proposed, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    executed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class SecurityEvent(Base):
+    __tablename__ = "security_events"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    workflow_id: Mapped[str | None] = mapped_column(String(36), index=True, nullable=True)
+    agent_id: Mapped[str | None] = mapped_column(String(36), index=True, nullable=True)
+    severity: Mapped[str] = mapped_column(String(40), default="medium", index=True)
+    category: Mapped[str] = mapped_column(String(120), index=True)
+    message: Mapped[str] = mapped_column(Text)
+    evidence: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    status: Mapped[SecurityEventStatus] = mapped_column(
+        Enum(SecurityEventStatus), default=SecurityEventStatus.open, index=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class CircuitBreaker(Base):
+    __tablename__ = "circuit_breakers"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    integration: Mapped[str] = mapped_column(String(120), unique=True, index=True)
+    limit_per_minute: Mapped[int] = mapped_column(Integer, default=120)
+    calls_this_window: Mapped[int] = mapped_column(Integer, default=0)
+    window_started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    state: Mapped[str] = mapped_column(String(40), default="closed")
+    opened_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

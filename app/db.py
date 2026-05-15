@@ -1,6 +1,6 @@
-from collections.abc import Generator
-import os
 import logging
+import os
+from collections.abc import Generator
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
@@ -16,41 +16,27 @@ class Base(DeclarativeBase):
 
 settings = get_settings()
 
-# ---------------------------------------------------------------------------
-# CockroachDB or SQLite backend
-# ---------------------------------------------------------------------------
-# Set ABOS_DATABASE_URL env var to use CockroachDB.
-# Falls back to the existing SQLite database_url when not set.
-# ---------------------------------------------------------------------------
-
-COCKROACH_URL = os.getenv(
-    "ABOS_DATABASE_URL",
-    "cockroachdb+psycopg2://cubiczan:oY-hPkgXtZjc6kGqY67Gyg@"
-    "vortex-giraffe-15678.jxf.gcp-us-east1.cockroachlabs.cloud:26257/"
-    "autonomous_business_os?sslmode=require"
-)
-
 USE_COCKROACH = os.getenv("USE_COCKROACHDB", "false").lower() in ("true", "1", "yes")
 
 if USE_COCKROACH:
+    cockroach_url = os.getenv("ABOS_DATABASE_URL")
+    if not cockroach_url:
+        raise RuntimeError("USE_COCKROACHDB is enabled, but ABOS_DATABASE_URL is not set")
     logger.info("Using CockroachDB backend")
-    _url = COCKROACH_URL
+    _url = cockroach_url
     _connect_args = {}
-    _pool_size = 10
-    _max_overflow = 5
+    _pool_options = {"pool_size": 10, "max_overflow": 5}
 else:
     _url = settings.database_url
     _connect_args = {"check_same_thread": False} if _url.startswith("sqlite") else {}
-    _pool_size = None
-    _max_overflow = None
+    _pool_options = {}
 
 engine = create_engine(
     _url,
     connect_args=_connect_args,
     pool_pre_ping=True,
-    pool_size=_pool_size,
-    max_overflow=_max_overflow,
     echo=False,
+    **_pool_options,
 )
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
 

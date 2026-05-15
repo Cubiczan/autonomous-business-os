@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.agents.client_onboarding import ClientOnboardingAgent
 from app.agents.delivery_monitoring import DeliveryMonitoringAgent
+from app.agents.department import DynamicDepartmentAgent
 from app.agents.finance_operations import FinanceOperationsAgent
 from app.agents.knowledge_communication import KnowledgeCommunicationAgent
 from app.agents.lead_qualification import LeadQualificationAgent
@@ -23,6 +24,7 @@ class MasterOrchestrator:
             "lead_qualification": LeadQualificationAgent(session),
             "client_onboarding": ClientOnboardingAgent(session),
             "delivery_monitoring": DeliveryMonitoringAgent(session),
+            "department_operation": DynamicDepartmentAgent(session),
             "finance_operations": FinanceOperationsAgent(session),
             "knowledge_communication": KnowledgeCommunicationAgent(session),
         }

@@ -54,6 +54,7 @@ class WorkflowCreateRequest(BaseModel):
         "lead_qualification",
         "client_onboarding",
         "delivery_monitoring",
+        "department_operation",
         "finance_operations",
         "knowledge_communication",
     ]
@@ -66,3 +67,17 @@ class ApprovalDecisionRequest(BaseModel):
     status: Literal["approved", "rejected"]
     decided_by: str
     decision_note: str | None = None
+
+
+class DepartmentLaunchRequest(BaseModel):
+    description: str = Field(min_length=3)
+    requested_by: str = "human"
+    run_immediately: bool = True
+
+
+class SkillCreateRequest(BaseModel):
+    description: str = Field(min_length=3)
+    name: str | None = None
+    scope: Literal["company", "department", "agent"] = "company"
+    department_id: str | None = None
+    agent_id: str | None = None

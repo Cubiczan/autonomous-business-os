@@ -12,7 +12,11 @@
 
 ## What It Does
 
-ABO orchestrates **5 specialized AI agents** that automate the full business operations pipeline:
+ABO now combines the original fixed business workflows with a **self-spawning department engine**.
+You can describe a new department in plain language and the system creates its purpose, goals,
+agents, skills, schedules, memory namespaces, and approval-gated operating loop.
+
+The original 5 specialized agents automate the full business operations pipeline:
 
 ```
 Lead Intake → Qualification → Onboarding → Delivery → Finance → Knowledge
@@ -68,6 +72,26 @@ No API keys needed. No external services. No configuration. Ship → Run → Dem
 | **Delivery Monitoring** | `delivery_monitoring` | Slack | Detect budget drift, communication gaps, schedule delays, post status, create escalations |
 | **Finance Operations** | `finance_operations` | Stripe, Accounting, Email | Create invoices, check overdue, reconcile payments, weekly summaries, HITL for follow-ups |
 | **Knowledge & Comms** | `knowledge_communication` | Slack, internal RAG | Ingest meeting summaries, answer knowledge queries, post to Slack |
+
+### Self-Spawning Departments
+
+| Capability | Endpoint | What Happens |
+|---|---|---|
+| Launch department | `POST /agents/departments` | Infers type, creates goals/rules, spawns standard + specialist agents, assigns skills, creates schedules |
+| Run department | `POST /agents/departments/{id}/run` | Starts a durable `department_operation` workflow |
+| Pause department | `POST /agents/departments/{id}/pause` | Pauses agents and scheduled work |
+| Kill department | `POST /agents/departments/{id}/kill` | Disables schedules and stops the department |
+| Mission board API | `GET /agents/mission` | Returns departments, agents, approvals, outputs, alerts, and skills |
+| Mission board UI | `/admin/mission` | Mobile-friendly command center |
+
+### Runtime Skill Registry
+
+- Core skills are seeded automatically at startup.
+- Plain-language skills can be created with `POST /agents/skills`.
+- JSON skill manifests dropped into `storage/skills/*.json` can be loaded with
+  `POST /agents/skills/refresh`.
+- Skills can be company-wide, department-scoped, or agent-specific.
+- The Mission board shows skill assignments and registry status.
 
 ### 11 Integration Adapters (18 Services)
 
@@ -190,6 +214,7 @@ Starts: **API server** (8000), **Background worker**, **Redis**, **Prometheus** 
 |---|---|
 | `http://localhost:8000/docs` | OpenAPI interactive docs |
 | `http://localhost:8000/admin` | Operations dashboard |
+| `http://localhost:8000/admin/mission` | Mission Control board |
 | `http://localhost:8000/health` | Health check |
 | `http://localhost:8000/metrics` | Prometheus metrics |
 | `http://localhost:9090` | Prometheus dashboard |

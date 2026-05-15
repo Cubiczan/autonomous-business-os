@@ -26,6 +26,18 @@ SSO or a private network in production. Add an identity-aware proxy before expos
 - Mask PII in logs before adding external log sinks.
 - Define retention rules for `memory_entries`, `audit_logs`, and `agent_tasks`.
 
+## Autonomous Agent Guardrails
+
+- All outbound communications, social publishing, newsletters, ads, and client messages create
+  `external_actions` and `human_approvals` before execution.
+- Financial, contractual, destructive, credential, and production-change actions are classified as
+  high-impact and cannot run without explicit approval.
+- `BaseAgent.execute_tool()` checks a circuit breaker for each tool before execution.
+- Untrusted email, web, document, or webhook text is inspected for prompt-injection markers and
+  recorded as a `security_event` when suspicious.
+- Agent trust levels are explicit: `autonomous`, `supervised`, and `approval_required`.
+- Departments can be paused or killed from the API, which disables scheduled work and stops agents.
+
 ## Deployment Controls
 
 - Use separate environments for development, staging, and production.
