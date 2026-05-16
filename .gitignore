@@ -20,3 +20,7 @@ logs/
 push-results.txt
 .DS_Store
 node_modules/
+
+# CHP session artifacts (local only)
+.chp_registry.json
+.chp/sessions/
