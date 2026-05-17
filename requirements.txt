@@ -12,3 +12,4 @@ sqlalchemy==2.0.48
 structlog==24.4.0
 tenacity==8.5.0
 uvicorn[standard]==0.33.0
+cubiczan-ml>=0.1.0  # CubicZan ML — Rust-powered Python bindings
