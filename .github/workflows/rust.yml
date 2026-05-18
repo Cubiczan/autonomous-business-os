@@ -1,0 +1,28 @@
+name: Rust Governance Core
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  governance-core:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust components
+        run: rustup component add rustfmt clippy
+
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+      - name: Run strict clippy
+        run: cargo clippy --locked --all-targets -p abos-governance-core -- -D warnings
+
+      - name: Run tests
+        run: cargo test --locked -p abos-governance-core
+
+      - name: Build release
+        run: cargo build --release --locked -p abos-governance-core

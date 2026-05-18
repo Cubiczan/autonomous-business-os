@@ -4,6 +4,9 @@
 
 The Autonomous Business Operating System is a FastAPI service with durable SQL state,
 background scheduling, external integration adapters, and operator-facing admin controls.
+It now includes a self-spawning department layer and runtime skill registry; see
+[`AUTONOMOUS_ARCHITECTURE.md`](AUTONOMOUS_ARCHITECTURE.md) for the full autonomous
+business-system design.
 
 ```mermaid
 flowchart LR
@@ -49,6 +52,12 @@ flowchart LR
 - `audit_logs`: operator and compliance trace.
 - `escalations`: unresolved operational risks.
 - `leads`: lead-specific scoring and outreach records.
+- `departments`: spawned business departments with goals, rules, health, and signals.
+- `agent_instances`: company-level and department-level runtime agents.
+- `skills` and `agent_skill_assignments`: runtime skill registry and app-store layer.
+- `department_schedules`: autonomous operating cadences for spawned departments.
+- `external_actions`: approval-gated external side effects before execution.
+- `security_events` and `circuit_breakers`: guardrail alerts and API abuse controls.
 
 ## Tool Calling
 

@@ -5,10 +5,12 @@ description = "Autonomous Business Operating System with multi-agent orchestrati
 requires-python = ">=3.11"
 dependencies = [
   "apscheduler==3.11.2",
+    "cubiczan-ml>=0.1.0",  # CubicZan ML
   "email-validator==2.3.0",
   "fastapi==0.124.4",
   "httpx==0.28.1",
   "jinja2==3.1.6",
+  "llama-cloud>=2.1.0",
   "prometheus-client==0.21.1",
   "pydantic==2.12.5",
   "pydantic-settings==2.13.1",

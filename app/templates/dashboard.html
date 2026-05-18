@@ -6,6 +6,18 @@
 </section>
 
 <section class="stats">
+  <article>
+    <span>departments</span>
+    <strong>{{ department_count }}</strong>
+  </article>
+  <article>
+    <span>agents</span>
+    <strong>{{ active_agents }}</strong>
+  </article>
+  <article>
+    <span>skills</span>
+    <strong>{{ skill_count }}</strong>
+  </article>
   {% for status, count in status_counts.items() %}
   <article>
     <span>{{ status.value }}</span>

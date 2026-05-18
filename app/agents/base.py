@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.models import AgentTask, AuditAction, TaskStatus, Workflow, utcnow
 from app.services.audit import AuditService
+from app.services.guardrails import CircuitBreakerService
 
 
 class BaseAgent:
@@ -14,6 +15,7 @@ class BaseAgent:
     def __init__(self, session: Session):
         self.session = session
         self.audit = AuditService(session)
+        self.circuit_breakers = CircuitBreakerService(session)
 
     def run(self, workflow: Workflow) -> dict[str, Any]:
         raise NotImplementedError
@@ -25,6 +27,7 @@ class BaseAgent:
         payload: dict[str, Any],
         func: Callable[[], Any],
     ) -> dict[str, Any]:
+        self.circuit_breakers.check(tool_name)
         task = AgentTask(
             workflow_id=workflow.id,
             agent_name=self.name,

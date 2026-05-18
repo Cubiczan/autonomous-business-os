@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page-head mission-head">
+  <div>
+    <h1>Mission Control</h1>
+    <p>Departments, agents, approvals, outputs, revenue signals, alerts, and skills.</p>
+  </div>
+</section>
+
+<section class="stats">
+  <article>
+    <span>departments</span>
+    <strong>{{ departments|length }}</strong>
+  </article>
+  <article>
+    <span>agents</span>
+    <strong>{{ agents|length }}</strong>
+  </article>
+  <article>
+    <span>open approvals</span>
+    <strong>{{ approvals|length }}</strong>
+  </article>
+  <article>
+    <span>alerts</span>
+    <strong>{{ security_events|length }}</strong>
+  </article>
+</section>
+
+<section>
+  <div class="section-title">
+    <h2>Company Layer</h2>
+  </div>
+  <div class="mission-list">
+    {% for agent in company_agents %}
+    <article class="mission-row">
+      <div>
+        <strong>{{ agent.name }}</strong>
+        <span>{{ agent.role }} · {{ agent.trust_level.value }}</span>
+      </div>
+      <span class="badge">{{ agent.status.value }}</span>
+    </article>
+    {% else %}
+    <article class="mission-row">No company agents online.</article>
+    {% endfor %}
+  </div>
+</section>
+
+<section>
+  <div class="section-title">
+    <h2>Departments</h2>
+  </div>
+  <div class="department-grid">
+    {% for department in departments %}
+    <article class="department-panel">
+      <div class="panel-head">
+        <div>
+          <h3>{{ department.name }}</h3>
+          <span>{{ department.department_type }} · {{ department.status.value }}</span>
+        </div>
+        <strong>{{ "%.0f"|format(department.health_score * 100) }}%</strong>
+      </div>
+      <p>{{ department.purpose }}</p>
+      <div class="signal-row">
+        {% for key, value in department.revenue_signals.items() %}
+        <span>{{ key }}: {{ value }}</span>
+        {% else %}
+        <span>No revenue signals yet</span>
+        {% endfor %}
+      </div>
+      <pre>{{ department.last_output }}</pre>
+    </article>
+    {% else %}
+    <article class="department-panel">No departments launched yet.</article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="grid">
+  <div>
+    <div class="section-title">
+      <h2>Task Queue</h2>
+      <a href="/admin/workflows">View all</a>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Task</th><th>Kind</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for workflow in workflows %}
+        <tr>
+          <td>{{ workflow.title }}</td>
+          <td>{{ workflow.kind }}</td>
+          <td><span class="badge">{{ workflow.status.value }}</span></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3">No workflows yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div>
+    <div class="section-title">
+      <h2>Approval Inbox</h2>
+      <a href="/admin/approvals">Review</a>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Approval</th><th>Reason</th></tr>
+      </thead>
+      <tbody>
+        {% for approval in approvals %}
+        <tr>
+          <td>{{ approval.title }}</td>
+          <td>{{ approval.reason }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="2">No approvals waiting.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="grid">
+  <div>
+    <div class="section-title">
+      <h2>External Actions</h2>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Action</th><th>Risk</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {% for action in external_actions %}
+        <tr>
+          <td>{{ action.summary }}</td>
+          <td>{{ action.risk_level }}</td>
+          <td><span class="badge">{{ action.status.value }}</span></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3">No external actions proposed.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div>
+    <div class="section-title">
+      <h2>Alert Feed</h2>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Severity</th><th>Category</th><th>Message</th></tr>
+      </thead>
+      <tbody>
+        {% for event in security_events %}
+        <tr>
+          <td><span class="badge">{{ event.severity }}</span></td>
+          <td>{{ event.category }}</td>
+          <td>{{ event.message }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3">No security alerts.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">
+    <h2>Skill Registry</h2>
+  </div>
+  <table>
+    <thead>
+      <tr><th>Skill</th><th>Scope</th><th>Agents</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      {% for skill in skills %}
+      <tr>
+        <td>
+          <strong>{{ skill.name }}</strong>
+          <span class="subtext">{{ skill.slug }}</span>
+        </td>
+        <td>{{ skill.scope.value }}</td>
+        <td>{{ assignment_counts.get(skill.id, 0) }}</td>
+        <td><span class="badge">{{ skill.status.value }}</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4">No skills registered.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

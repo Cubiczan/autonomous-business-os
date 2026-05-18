@@ -9,8 +9,9 @@ from app.api.routes_agents import router as agents_router
 from app.api.routes_health import REQUEST_COUNTER, router as health_router
 from app.api.routes_webhooks import router as webhooks_router
 from app.config import get_settings
-from app.db import init_db
+from app.db import SessionLocal, init_db
 from app.logging_config import configure_logging
+from app.services.departments import DepartmentFactory
 from app.services.scheduler import start_scheduler
 
 settings = get_settings()
@@ -21,6 +22,8 @@ log = structlog.get_logger()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    with SessionLocal() as session:
+        DepartmentFactory(session).ensure_company_layer()
     scheduler = start_scheduler()
     log.info("business_os_started", environment=settings.environment)
     yield

@@ -80,6 +80,13 @@ h2 {
   margin-top: 6px;
 }
 
+.mission-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -112,6 +119,76 @@ h2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 22px;
   margin-bottom: 28px;
+}
+
+.department-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.department-panel,
+.mission-row {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.department-panel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.department-panel h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.department-panel p,
+.department-panel span,
+.mission-row span,
+.subtext {
+  color: var(--muted);
+}
+
+.panel-head,
+.signal-row,
+.mission-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-head span,
+.subtext {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+.signal-row {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.signal-row span {
+  min-height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 9px;
+  background: #fbfcfd;
+  font-size: 12px;
+}
+
+.mission-list {
+  display: grid;
+  gap: 8px;
+}
+
+.mission-row {
+  padding: 12px 14px;
 }
 
 section {
@@ -216,6 +293,13 @@ button.secondary {
 
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .mission-head,
+  .panel-head,
+  .mission-row {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   table {

@@ -1,0 +1,20 @@
+[workspace]
+resolver = "2"
+members = ["crates/abos-governance-core"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Cubiczan"]
+license = "MIT"
+repository = "https://codeberg.org/Cubiczan/autonomous-business-os"
+description = "Native Rust governance sidecar for Autonomous Business OS"
+
+[workspace.dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+hex = "0.4"
+hmac = "0.12"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+thiserror = "2"

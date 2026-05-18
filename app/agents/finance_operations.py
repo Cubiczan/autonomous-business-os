@@ -9,6 +9,7 @@ from app.integrations.email import EmailClient
 from app.integrations.stripe_client import StripeClient
 from app.models import Workflow, WorkflowStatus
 from app.services.approval import ApprovalService
+from app.services.guardrails import GuardrailService
 from app.services.memory import MemoryService
 
 
@@ -34,9 +35,22 @@ class FinanceOperationsAgent(BaseAgent):
         )
         self.memory = MemoryService(session)
         self.approvals = ApprovalService(session)
+        self.guardrails = GuardrailService(session)
 
     def run(self, workflow: Workflow) -> dict[str, Any]:
         payload = workflow.payload
+        invoice_action = self.guardrails.request_external_action(
+            workflow=workflow,
+            action_type="invoice_create",
+            summary=f"Create invoice for {payload.get('customer_id', 'customer')}",
+            payload=payload,
+        )
+        if invoice_action["requires_approval"]:
+            return {
+                "invoice": None,
+                "invoice_action": invoice_action,
+                "summary": "Invoice creation is waiting for human approval.",
+            }
         invoice = self.execute_tool(
             workflow,
             "stripe_create_invoice",
