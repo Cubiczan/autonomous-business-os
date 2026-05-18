@@ -1,0 +1,34 @@
+# CHP R0 Gate Configuration — autonomous-business-os
+# Domain: Finance (CFO Accuracy)
+r0_gate:
+  solvable: true
+  scoped: true
+  valid: true
+  worth_it: true
+
+foundation:
+  pass_threshold: 100
+  max_weak_assumptions: 3
+  max_invalidation_conditions: 2
+  require_key_vulnerability: true
+
+adversary:
+  phase0_mandatory: true
+  round3_mandatory: true
+  max_structural_vulnerabilities: 3
+  council_spawn_threshold: 85
+
+model_parity:
+  max_tier_delta: 1
+  halt_on_significant_gap: true
+
+cfo_accuracy:
+  enabled: true
+  foundation_floor: 100
+  require_no_open_vulnerabilities: true
+  require_no_open_blind_spots: true
+
+payload:
+  require_ascii: true
+  max_rounds: 5
+  require_echo_confirmation: true
