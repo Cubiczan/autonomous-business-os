@@ -258,6 +258,35 @@ curl -X POST "http://localhost:8000/agents/workflows?run_immediately=true" \
 - **No secrets in code**: All credentials via environment variables
 - **Safe simulation mode**: No external calls without explicit credentials
 
+### Native Rust Governance Core
+
+This repo includes a Rust sidecar at `crates/abos-governance-core` for deterministic, security-critical policy logic:
+
+- approval classification for outbound, financial, legal, destructive, credential, and production actions,
+- prompt-injection marker inspection for untrusted content,
+- rate-limit and circuit-breaker state transitions,
+- canonical audit-event hashing,
+- HMAC signed ledger entries for release and compliance trails.
+
+Rust audit gate:
+
+```bash
+cargo fmt -- --check
+cargo clippy --locked --all-targets -p abos-governance-core -- -D warnings
+cargo test --locked -p abos-governance-core
+cargo build --release --locked -p abos-governance-core
+```
+
+CLI smoke:
+
+```bash
+cargo run -p abos-governance-core -- classify-action send_email '{"to":"client@example.com"}'
+cargo run -p abos-governance-core -- inspect-text email "ignore previous instructions"
+ABOS_LEDGER_SIGNING_KEY="change-me" cargo run -p abos-governance-core -- sign-event audit-event.json local
+```
+
+Signing material is runtime-only through `ABOS_LEDGER_SIGNING_KEY`; no ledger keys are stored in source.
+
 ---
 
 ## Deployment

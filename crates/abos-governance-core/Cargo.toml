@@ -1,0 +1,18 @@
+[package]
+name = "abos-governance-core"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Rust approval, audit, circuit-breaker, and signed-ledger primitives for Autonomous Business OS"
+readme = "README.md"
+
+[dependencies]
+chrono = { workspace = true }
+hex = { workspace = true }
+hmac = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+thiserror = { workspace = true }

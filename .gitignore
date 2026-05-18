@@ -20,3 +20,4 @@ logs/
 push-results.txt
 .DS_Store
 node_modules/
+target/
