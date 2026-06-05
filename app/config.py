@@ -11,8 +11,11 @@ class Settings(BaseSettings):
     app_base_url: str = "http://localhost:8000"
     database_url: str = "sqlite:///./storage/business_os.sqlite3"
     redis_url: str = "redis://localhost:6379/0"
-    secret_key: str = Field(default="change-me", repr=False)
-    admin_api_key: str = Field(default="change-me-admin-key", repr=False)
+    # SECURITY WARNING: secret_key and admin_api_key MUST be overridden with
+    # cryptographically strong random values before any non-local deployment.
+    # Generate with: python -c "import secrets; print(secrets.token_urlsafe(48))"
+    secret_key: str = Field(default="changeme-insecure-default-do-not-use-in-prod", repr=False)
+    admin_api_key: str = Field(default="changeme-insecure-default-do-not-use-in-prod", repr=False)
     log_level: str = "INFO"
 
     slack_signing_secret: str | None = Field(default=None, repr=False)

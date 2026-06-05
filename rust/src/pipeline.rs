@@ -37,6 +37,8 @@ pub struct BusinessOSConfig {
 impl Default for BusinessOSConfig {
     fn default() -> Self {
         Self {
+            // SECURITY WARNING: This default is for unit tests / local dev ONLY.
+            // Always override admin_api_key with a strong random value in production.
             admin_api_key: "changeme".into(),
             replay_window_secs: 300,
             rate_limit_max_tokens: 100,
