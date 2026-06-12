@@ -191,7 +191,7 @@ Docker Compose includes Prometheus with pre-configured scrape target.
 ### Local Development
 
 ```bash
-git clone https://github.com/zan-maker/autonomous-business-os.git
+git clone https://github.com/icohangar-ops/autonomous-business-os.git
 cd autonomous-business-os
 cp .env.example .env
 python -m venv .venv
