@@ -21,6 +21,7 @@ log = structlog.get_logger()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    settings.validate_runtime_security()
     init_db()
     with SessionLocal() as session:
         DepartmentFactory(session).ensure_company_layer()

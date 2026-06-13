@@ -116,6 +116,12 @@ class Workflow(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
     kind: Mapped[str] = mapped_column(String(80), index=True)
+    # Stable per-workflow key so downstream integrations (invoicing, CRM,
+    # outbound email) can deduplicate even if a dispatch is retried. Populated
+    # at creation time; unique to reject accidental double-inserts.
+    idempotency_key: Mapped[str] = mapped_column(
+        String(36), unique=True, index=True, default=new_id
+    )
     status: Mapped[WorkflowStatus] = mapped_column(
         Enum(WorkflowStatus), default=WorkflowStatus.pending, index=True
     )

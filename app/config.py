@@ -4,6 +4,8 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+INSECURE_DEFAULT_CREDENTIAL = "changeme-insecure-default-do-not-use-in-prod"
+
 
 class Settings(BaseSettings):
     app_name: str = "Autonomous Business Operating System"
@@ -14,8 +16,8 @@ class Settings(BaseSettings):
     # SECURITY WARNING: secret_key and admin_api_key MUST be overridden with
     # cryptographically strong random values before any non-local deployment.
     # Generate with: python -c "import secrets; print(secrets.token_urlsafe(48))"
-    secret_key: str = Field(default="changeme-insecure-default-do-not-use-in-prod", repr=False)
-    admin_api_key: str = Field(default="changeme-insecure-default-do-not-use-in-prod", repr=False)
+    secret_key: str = Field(default=INSECURE_DEFAULT_CREDENTIAL, repr=False)
+    admin_api_key: str = Field(default=INSECURE_DEFAULT_CREDENTIAL, repr=False)
     log_level: str = "INFO"
 
     slack_signing_secret: str | None = Field(default=None, repr=False)
@@ -69,6 +71,28 @@ class Settings(BaseSettings):
     @property
     def storage_dir(self) -> Path:
         return Path("storage")
+
+    def validate_runtime_security(self) -> None:
+        """Fail fast if insecure default credentials are used outside development.
+
+        A deployment that forgets to set SECRET_KEY / ADMIN_API_KEY would
+        otherwise silently run with the published default values, leaving the
+        admin surface fully authenticated by anyone who has read the README.
+        """
+        if self.environment == "development":
+            return
+        insecure = []
+        if self.secret_key == INSECURE_DEFAULT_CREDENTIAL:
+            insecure.append("secret_key")
+        if self.admin_api_key == INSECURE_DEFAULT_CREDENTIAL:
+            insecure.append("admin_api_key")
+        if insecure:
+            raise RuntimeError(
+                "Insecure default credential(s) detected for "
+                f"{', '.join(insecure)} while environment={self.environment!r}. "
+                "Set strong random values via environment variables before deploying. "
+                'Generate with: python -c "import secrets; print(secrets.token_urlsafe(48))"'
+            )
 
 
 @lru_cache

@@ -32,6 +32,12 @@ class WorkflowService:
         return workflow
 
     def mark_running(self, workflow: Workflow) -> None:
+        # The scheduler may have already atomically claimed this workflow
+        # (status -> running, attempts incremented) to win the dispatch race.
+        # Avoid double-counting attempts / emitting a duplicate audit event in
+        # that case while still marking running for direct callers.
+        if workflow.status == WorkflowStatus.running:
+            return
         workflow.status = WorkflowStatus.running
         workflow.attempts += 1
         workflow.updated_at = utcnow()
