@@ -52,6 +52,15 @@ class Settings(BaseSettings):
 
     stripe_api_key: str | None = Field(default=None, repr=False)
     accounting_provider: str = "quickbooks"
+
+    airbyte_client_id: str | None = Field(default=None, repr=False)
+    airbyte_client_secret: str | None = Field(default=None, repr=False)
+    airbyte_workspace_name: str = "default"
+    airbyte_organization_id: str | None = None
+
+    linear_team_id: str | None = None
+    jira_project_key: str | None = None
+    jira_issue_type: str = "Task"
     quickbooks_access_token: str | None = Field(default=None, repr=False)
     xero_access_token: str | None = Field(default=None, repr=False)
 
