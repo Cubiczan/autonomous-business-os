@@ -1,4 +1,4 @@
-# 🏢 Autonomous Business Operating System
+# Autonomous Business Operating System
 
 **Production-ready multi-agent orchestration for the entire business lifecycle — from lead to revenue.**
 
