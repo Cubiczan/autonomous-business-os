@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "abos": {
+      "command": "python",
+      "args": ["-m", "app.mcp"],
+      "env": {
+        "ABOS_MCP_MODE": "inprocess",
+        "ABOS_LEDGER_SIGNING_KEY": "change-me"
+      }
+    }
+  }
+}

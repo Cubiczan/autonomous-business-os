@@ -1,0 +1,20 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.icohangar-ops/autonomous-business-os-mcp",
+  "description": "Stdio MCP pipe for Cubiczan Autonomous Business OS: Rust classify-action, HITL approvals, finance and lead workflows.",
+  "repository": {
+    "url": "https://github.com/icohangar-ops/autonomous-business-os",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@cubiczan/autonomous-business-os-mcp",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

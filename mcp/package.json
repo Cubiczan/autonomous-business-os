@@ -1,0 +1,48 @@
+{
+  "name": "@cubiczan/autonomous-business-os-mcp",
+  "version": "0.1.0",
+  "description": "Stdio MCP pipe for Cubiczan Autonomous Business OS — governance sidecar, HITL approvals, and domain workflows. CHP is the lock; this package is the pipe.",
+  "mcpName": "io.github.icohangar-ops/autonomous-business-os-mcp",
+  "type": "module",
+  "bin": {
+    "autonomous-business-os-mcp": "./bin/abos-mcp.js"
+  },
+  "files": [
+    "bin",
+    "README.md",
+    "server.json"
+  ],
+  "scripts": {
+    "start": "node bin/abos-mcp.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "mcp-server",
+    "autonomous-business-os",
+    "human-in-the-loop",
+    "hitl",
+    "agent-governance",
+    "audit-trail",
+    "chp",
+    "claude",
+    "cursor",
+    "cubiczan"
+  ],
+  "author": "Cubiczan",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/icohangar-ops/autonomous-business-os.git"
+  },
+  "homepage": "https://github.com/icohangar-ops/autonomous-business-os/tree/main/mcp#readme",
+  "bugs": {
+    "url": "https://github.com/icohangar-ops/autonomous-business-os/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

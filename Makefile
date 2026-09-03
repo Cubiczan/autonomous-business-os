@@ -1,4 +1,4 @@
-.PHONY: install dev worker test lint docker
+.PHONY: install dev worker test lint docker mcp governance
 
 install:
 	python -m pip install -r requirements.txt
@@ -18,3 +18,9 @@ lint:
 
 docker:
 	docker compose up --build
+
+governance:
+	cargo build -p abos-governance-core
+
+mcp: governance
+	python -m app.mcp

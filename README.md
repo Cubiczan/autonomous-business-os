@@ -289,6 +289,46 @@ Signing material is runtime-only through `ABOS_LEDGER_SIGNING_KEY`; no ledger ke
 
 ---
 
+## MCP (Cursor / Claude Code)
+
+Cubiczan ships a local **stdio MCP** so agents can call this product without driving the REST admin API by hand. CHP is the lock; MCP is the pipe. Spend-gate tools stay in [`@cubiczan/chp-mcp`](https://www.npmjs.com/package/@cubiczan/chp-mcp) and are not duplicated here.
+
+Default mode is **in-process**. `uvicorn` does **not** need to be running. Integrations use the existing zero-credential simulation path when Stripe / HubSpot keys are absent.
+
+```bash
+python -m pip install -e ".[mcp]"
+cargo build -p abos-governance-core
+python -m app.mcp
+```
+
+Cursor (also committed as `.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "abos": {
+      "command": "python",
+      "args": ["-m", "app.mcp"],
+      "env": {
+        "ABOS_LEDGER_SIGNING_KEY": "change-me"
+      }
+    }
+  }
+}
+```
+
+Claude Code:
+
+```bash
+claude mcp add abos -- python -m app.mcp
+```
+
+Intended published package: `@cubiczan/autonomous-business-os-mcp` (packaging is prepared; not published from every change). After publish: `npx -y @cubiczan/autonomous-business-os-mcp` with `ABOS_REPO_ROOT` pointing at this checkout.
+
+Set `ABOS_MCP_MODE=http` only when `uvicorn` is already serving `/agents/*`. Full install notes: [`mcp/README.md`](mcp/README.md).
+
+---
+
 ## Deployment
 
 | Platform | Guide |
@@ -323,7 +363,8 @@ autonomous-business-os/
 │   └── static/           # Dashboard CSS
 ├── docs/                 # Architecture, deployment, security, runbook
 ├── infra/                # Prometheus, AWS, GCP, Railway configs
-├── tests/                # Unit tests (scoring, security, knowledge, delivery)
+├── tests/                # Unit tests (scoring, security, knowledge, delivery, MCP)
+├── mcp/                  # @cubiczan/autonomous-business-os-mcp launcher + install docs
 ├── Dockerfile            # Multi-stage Python 3.11-slim
 ├── docker-compose.yml    # API + Worker + Redis + Prometheus
 └── requirements.txt      # 14 dependencies
