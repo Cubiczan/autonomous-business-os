@@ -128,7 +128,7 @@ def test_stdio_tools_list_classify_and_finance(governance_bin: str, tmp_path: Pa
                 "classify_action",
                 {"action_type": "send_email", "payload": {"to": "client@example.com"}},
             )
-            assert classified.isError is not True
+            assert getattr(classified, "is_error", False) is not True
             classification = _tool_text(classified)
             assert classification["requires_approval"] is True
             assert classification["risk_level"] == "high"
@@ -142,13 +142,13 @@ def test_stdio_tools_list_classify_and_finance(governance_bin: str, tmp_path: Pa
                     "customer_email": "billing@example.com",
                 },
             )
-            assert finance.isError is not True
+            assert getattr(finance, "is_error", False) is not True
             finance_body = _tool_text(finance)
             assert finance_body["status"] == "waiting_for_human"
             assert finance_body["result"]["invoice_action"]["requires_approval"] is True
 
             approvals = await client.call_tool("list_approvals", {"status": "open"})
-            assert approvals.isError is not True
+            assert getattr(approvals, "is_error", False) is not True
             inbox = _tool_text(approvals)
             assert inbox["approvals"]
             assert inbox["approvals"][0]["id"] == finance_body["result"]["invoice_action"]["approval_id"]
