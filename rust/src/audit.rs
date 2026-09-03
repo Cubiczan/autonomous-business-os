@@ -10,9 +10,7 @@ use chrono::Utc;
 use serde_json;
 use uuid::Uuid;
 
-use crate::types::{
-    AuditAction, AuditEntry, Severity, WorkflowKind,
-};
+use crate::types::{AuditAction, AuditEntry, Severity, WorkflowKind};
 
 // ===========================================================================
 // Query
@@ -95,7 +93,9 @@ pub struct AuditService {
 impl AuditService {
     /// Creates an empty audit service.
     pub fn new() -> Self {
-        Self { entries: Vec::new() }
+        Self {
+            entries: Vec::new(),
+        }
     }
 
     // -------------------------------------------------------------------
@@ -141,7 +141,10 @@ impl AuditService {
         self.record(
             AuditAction::WorkflowCreated,
             "system",
-            &format!("Workflow {} created (kind={:?}, source={})", workflow_id, kind, source),
+            &format!(
+                "Workflow {} created (kind={:?}, source={})",
+                workflow_id, kind, source
+            ),
             Some(workflow_id),
             serde_json::json!({
                 "kind": format!("{:?}", kind),
@@ -262,7 +265,10 @@ impl AuditService {
         self.record(
             AuditAction::ApprovalGranted,
             decided_by,
-            &format!("Approval granted for workflow {} by {}", workflow_id, decided_by),
+            &format!(
+                "Approval granted for workflow {} by {}",
+                workflow_id, decided_by
+            ),
             Some(workflow_id),
             serde_json::json!({ "decided_by": decided_by }),
         )
@@ -444,16 +450,50 @@ mod tests {
     #[test]
     fn record_generates_unique_ids() {
         let mut svc = AuditService::new();
-        let id1 = svc.record(AuditAction::ConfigChanged, "a", "m", None, serde_json::json!({})).id.clone();
-        let id2 = svc.record(AuditAction::ConfigChanged, "a", "m", None, serde_json::json!({})).id.clone();
+        let id1 = svc
+            .record(
+                AuditAction::ConfigChanged,
+                "a",
+                "m",
+                None,
+                serde_json::json!({}),
+            )
+            .id
+            .clone();
+        let id2 = svc
+            .record(
+                AuditAction::ConfigChanged,
+                "a",
+                "m",
+                None,
+                serde_json::json!({}),
+            )
+            .id
+            .clone();
         assert_ne!(id1, id2);
     }
 
     #[test]
     fn record_preserves_timestamp_order() {
         let mut svc = AuditService::new();
-        let ts1 = svc.record(AuditAction::ConfigChanged, "a", "first", None, serde_json::json!({})).timestamp;
-        let ts2 = svc.record(AuditAction::ConfigChanged, "a", "second", None, serde_json::json!({})).timestamp;
+        let ts1 = svc
+            .record(
+                AuditAction::ConfigChanged,
+                "a",
+                "first",
+                None,
+                serde_json::json!({}),
+            )
+            .timestamp;
+        let ts2 = svc
+            .record(
+                AuditAction::ConfigChanged,
+                "a",
+                "second",
+                None,
+                serde_json::json!({}),
+            )
+            .timestamp;
         assert!(ts2 >= ts1);
     }
 
@@ -629,7 +669,13 @@ mod tests {
     #[test]
     fn query_by_time_range() {
         let mut svc = AuditService::new();
-        svc.record(AuditAction::ConfigChanged, "a", "old", None, serde_json::json!({}));
+        svc.record(
+            AuditAction::ConfigChanged,
+            "a",
+            "old",
+            None,
+            serde_json::json!({}),
+        );
         // Entries are appended with Utc::now(), so "since" a bit in the past
         // should include them all.
         let since = Utc::now() - Duration::seconds(60);
@@ -643,7 +689,13 @@ mod tests {
     fn query_with_limit() {
         let mut svc = AuditService::new();
         for i in 0..10 {
-            svc.record(AuditAction::ConfigChanged, "a", &i.to_string(), None, serde_json::json!({}));
+            svc.record(
+                AuditAction::ConfigChanged,
+                "a",
+                &i.to_string(),
+                None,
+                serde_json::json!({}),
+            );
         }
         let q = AuditQuery::new().limit(3);
         let results = svc.query(&q);
@@ -668,8 +720,20 @@ mod tests {
     #[test]
     fn query_empty_returns_all() {
         let mut svc = AuditService::new();
-        svc.record(AuditAction::ConfigChanged, "a", "m", None, serde_json::json!({}));
-        svc.record(AuditAction::ConfigChanged, "b", "m", None, serde_json::json!({}));
+        svc.record(
+            AuditAction::ConfigChanged,
+            "a",
+            "m",
+            None,
+            serde_json::json!({}),
+        );
+        svc.record(
+            AuditAction::ConfigChanged,
+            "b",
+            "m",
+            None,
+            serde_json::json!({}),
+        );
         let q = AuditQuery::new();
         assert_eq!(svc.query(&q).len(), 2);
     }
@@ -677,7 +741,13 @@ mod tests {
     #[test]
     fn query_no_matches() {
         let mut svc = AuditService::new();
-        svc.record(AuditAction::ConfigChanged, "a", "m", None, serde_json::json!({}));
+        svc.record(
+            AuditAction::ConfigChanged,
+            "a",
+            "m",
+            None,
+            serde_json::json!({}),
+        );
         let q = AuditQuery::new().workflow_id("nonexistent");
         assert!(svc.query(&q).is_empty());
     }
@@ -710,7 +780,13 @@ mod tests {
     fn entries_are_in_chronological_order() {
         let mut svc = AuditService::new();
         for i in 0..5 {
-            svc.record(AuditAction::ConfigChanged, "a", &i.to_string(), None, serde_json::json!({}));
+            svc.record(
+                AuditAction::ConfigChanged,
+                "a",
+                &i.to_string(),
+                None,
+                serde_json::json!({}),
+            );
         }
         let entries: Vec<_> = svc.query(&AuditQuery::new());
         for window in entries.windows(2) {

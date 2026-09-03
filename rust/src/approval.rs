@@ -85,7 +85,12 @@ impl ApprovalService {
         decided_by: &str,
         note: &str,
     ) -> Result<&HumanApproval, ApprovalError> {
-        self.decide(approval_id, ApprovalDecision::Rejected, decided_by, Some(note))
+        self.decide(
+            approval_id,
+            ApprovalDecision::Rejected,
+            decided_by,
+            Some(note),
+        )
     }
 
     /// Internal decision helper — moves the approval from pending to decided.
@@ -160,10 +165,7 @@ impl ApprovalService {
             let total: i64 = self
                 .decided
                 .iter()
-                .filter_map(|a| {
-                    a.decided_at
-                        .map(|d| (d - a.requested_at).num_seconds())
-                })
+                .filter_map(|a| a.decided_at.map(|d| (d - a.requested_at).num_seconds()))
                 .sum();
             let count = self
                 .decided

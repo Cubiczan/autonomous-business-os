@@ -21,10 +21,7 @@ pub enum TransitionError {
     #[error("workflow has reached max attempts ({max_attempts})")]
     MaxAttemptsExceeded { max_attempts: u32 },
     #[error("task invalid transition from {from:?} to {to:?}")]
-    InvalidTaskTransition {
-        from: TaskStatus,
-        to: TaskStatus,
-    },
+    InvalidTaskTransition { from: TaskStatus, to: TaskStatus },
     #[error("approval already decided")]
     AlreadyDecided,
 }
@@ -59,9 +56,7 @@ impl WorkflowStateMachine {
             ),
             WorkflowStatus::WaitingForHuman => matches!(
                 to,
-                WorkflowStatus::Running
-                    | WorkflowStatus::Completed
-                    | WorkflowStatus::Failed
+                WorkflowStatus::Running | WorkflowStatus::Completed | WorkflowStatus::Failed
             ),
             WorkflowStatus::Failed => matches!(to, WorkflowStatus::Pending),
             WorkflowStatus::Completed => false,
@@ -74,10 +69,7 @@ impl WorkflowStateMachine {
     /// Move `workflow` to `to` if the transition is valid.
     ///
     /// This is the low-level primitive used by the convenience methods below.
-    pub fn transition(
-        workflow: &mut Workflow,
-        to: WorkflowStatus,
-    ) -> Result<(), TransitionError> {
+    pub fn transition(workflow: &mut Workflow, to: WorkflowStatus) -> Result<(), TransitionError> {
         let from = workflow.status;
         if !Self::can_transition(from, to) {
             return Err(TransitionError::InvalidTransition { from, to });
@@ -457,7 +449,8 @@ mod tests {
     #[test]
     fn workflow_mark_completed_from_pending_fails() {
         let mut wf = fresh_workflow();
-        let err = WorkflowStateMachine::mark_completed(&mut wf, serde_json::json!(null)).unwrap_err();
+        let err =
+            WorkflowStateMachine::mark_completed(&mut wf, serde_json::json!(null)).unwrap_err();
         assert!(matches!(err, TransitionError::InvalidTransition { .. }));
     }
 
@@ -844,13 +837,8 @@ mod tests {
     fn approval_already_decided_approve_again() {
         let mut a = fresh_approval();
         ApprovalStateMachine::decide(&mut a, ApprovalDecision::Approved, "alice", None).unwrap();
-        let err = ApprovalStateMachine::decide(
-            &mut a,
-            ApprovalDecision::Rejected,
-            "bob",
-            None,
-        )
-        .unwrap_err();
+        let err = ApprovalStateMachine::decide(&mut a, ApprovalDecision::Rejected, "bob", None)
+            .unwrap_err();
         assert_eq!(err, TransitionError::AlreadyDecided);
     }
 
@@ -858,13 +846,8 @@ mod tests {
     fn approval_already_decided_reject_again() {
         let mut a = fresh_approval();
         ApprovalStateMachine::decide(&mut a, ApprovalDecision::Rejected, "alice", None).unwrap();
-        let err = ApprovalStateMachine::decide(
-            &mut a,
-            ApprovalDecision::Approved,
-            "bob",
-            None,
-        )
-        .unwrap_err();
+        let err = ApprovalStateMachine::decide(&mut a, ApprovalDecision::Approved, "bob", None)
+            .unwrap_err();
         assert_eq!(err, TransitionError::AlreadyDecided);
     }
 

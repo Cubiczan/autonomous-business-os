@@ -116,10 +116,7 @@ impl LeadScoringService {
     pub fn new(config: ScoringConfig) -> Self {
         LeadScoringService {
             config,
-            decision_maker_titles: Self::DEFAULT_TITLES
-                .iter()
-                .map(|s| s.to_string())
-                .collect(),
+            decision_maker_titles: Self::DEFAULT_TITLES.iter().map(|s| s.to_string()).collect(),
             target_industries: Self::DEFAULT_INDUSTRIES
                 .iter()
                 .map(|s| s.to_string())
@@ -321,8 +318,7 @@ mod tests {
     }
 
     fn lead_with_enrichment(enrichment: serde_json::Value) -> Lead {
-        Lead::new("l-1", "Jane Smith", "jane@example.com", "Acme Corp")
-            .with_enrichment(enrichment)
+        Lead::new("l-1", "Jane Smith", "jane@example.com", "Acme Corp").with_enrichment(enrichment)
     }
 
     // ── Default config ────────────────────────────────────────────
@@ -356,8 +352,7 @@ mod tests {
     #[test]
     fn empty_email_no_score() {
         let s = svc();
-        let lead = Lead::new("l-2", "Jane", "", "Acme")
-            .with_enrichment(serde_json::json!({}));
+        let lead = Lead::new("l-2", "Jane", "", "Acme").with_enrichment(serde_json::json!({}));
         let b = s.score_breakdown(&lead);
         assert_eq!(b.points_email, 0);
     }
@@ -365,8 +360,7 @@ mod tests {
     #[test]
     fn whitespace_email_no_score() {
         let s = svc();
-        let lead = Lead::new("l-3", "Jane", "   ", "Acme")
-            .with_enrichment(serde_json::json!({}));
+        let lead = Lead::new("l-3", "Jane", "   ", "Acme").with_enrichment(serde_json::json!({}));
         let b = s.score_breakdown(&lead);
         assert_eq!(b.points_email, 0);
     }
@@ -519,8 +513,8 @@ mod tests {
     #[test]
     fn name_none_no_title_match() {
         let s = svc();
-        let lead = Lead::new("l-6", "", "jane@example.com", "Acme")
-            .with_enrichment(serde_json::json!({}));
+        let lead =
+            Lead::new("l-6", "", "jane@example.com", "Acme").with_enrichment(serde_json::json!({}));
         let b = s.score_breakdown(&lead);
         assert_eq!(b.points_title, 0);
     }
@@ -567,8 +561,8 @@ mod tests {
     #[test]
     fn company_none_no_industry_match_from_company() {
         let s = svc();
-        let lead = Lead::new("l-10", "Jane", "jane@retail.com", "")
-            .with_enrichment(serde_json::json!({}));
+        let lead =
+            Lead::new("l-10", "Jane", "jane@retail.com", "").with_enrichment(serde_json::json!({}));
         let b = s.score_breakdown(&lead);
         assert_eq!(b.points_industry, 0);
     }

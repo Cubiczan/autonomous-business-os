@@ -3,8 +3,8 @@
 //! Defines the workflow state machine, approval chains, audit actions,
 //! escalation tracking, lead scoring, and secret redaction primitives.
 
-use serde::{Deserialize, Serialize};
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 // ===========================================================================
 // Workflow State Machine
@@ -51,10 +51,7 @@ impl WorkflowStatus {
 
     /// Returns true if the status represents a terminal state.
     pub fn is_terminal(self) -> bool {
-        matches!(
-            self,
-            WorkflowStatus::Completed | WorkflowStatus::Cancelled
-        )
+        matches!(self, WorkflowStatus::Completed | WorkflowStatus::Cancelled)
     }
 }
 
@@ -343,8 +340,16 @@ impl Lead {
         Self {
             id: id.to_owned(),
             email: email.to_owned(),
-            company: if company.is_empty() { None } else { Some(company.to_owned()) },
-            name: if name.is_empty() { None } else { Some(name.to_owned()) },
+            company: if company.is_empty() {
+                None
+            } else {
+                Some(company.to_owned())
+            },
+            name: if name.is_empty() {
+                None
+            } else {
+                Some(name.to_owned())
+            },
             source: String::new(),
             score: None,
             tier: None,
@@ -491,8 +496,14 @@ mod tests {
             ApprovalDecision::Approved => ApprovalStatus::Approved,
             ApprovalDecision::Rejected => ApprovalStatus::Rejected,
         };
-        assert_eq!(decision_to_status(ApprovalDecision::Approved), ApprovalStatus::Approved);
-        assert_eq!(decision_to_status(ApprovalDecision::Rejected), ApprovalStatus::Rejected);
+        assert_eq!(
+            decision_to_status(ApprovalDecision::Approved),
+            ApprovalStatus::Approved
+        );
+        assert_eq!(
+            decision_to_status(ApprovalDecision::Rejected),
+            ApprovalStatus::Rejected
+        );
     }
 
     #[test]
@@ -566,7 +577,12 @@ mod tests {
     #[test]
     fn severity_ordering() {
         // Verify severity levels are all present
-        let severities = [Severity::Low, Severity::Medium, Severity::High, Severity::Critical];
+        let severities = [
+            Severity::Low,
+            Severity::Medium,
+            Severity::High,
+            Severity::Critical,
+        ];
         assert_eq!(severities.len(), 4);
     }
 

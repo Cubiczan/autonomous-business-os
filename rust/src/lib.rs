@@ -25,8 +25,8 @@
 //! | `pipeline` | Full BusinessOS façade tying all subsystems together |
 
 pub mod approval;
-pub mod bridge;
 pub mod audit;
+pub mod bridge;
 pub mod orchestrator;
 pub mod pipeline;
 pub mod rate_limit;
@@ -35,5 +35,5 @@ pub mod security;
 pub mod state_machine;
 pub mod types;
 
-pub use pipeline::BusinessOS;
 pub use bridge::*;
+pub use pipeline::BusinessOS;

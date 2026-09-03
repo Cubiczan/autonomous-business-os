@@ -102,19 +102,13 @@ impl BusinessOS {
         };
 
         let audit = AuditService::new();
-        let orchestrator = Orchestrator::with_audit(
-            orchestrator_config,
-            AuditService::new(),
-        );
+        let orchestrator = Orchestrator::with_audit(orchestrator_config, AuditService::new());
 
         Self {
             audit,
             approvals: ApprovalService::new(),
             scoring: LeadScoringService::new(ScoringConfig::default()),
-            security: SecurityService::new(
-                config.admin_api_key.clone(),
-                config.replay_window_secs,
-            ),
+            security: SecurityService::new(config.admin_api_key.clone(), config.replay_window_secs),
             orchestrator,
             guard: RequestGuard::new(BucketConfig {
                 max_tokens: config.rate_limit_max_tokens,
@@ -132,12 +126,7 @@ impl BusinessOS {
     }
 
     /// Register a named circuit breaker on the request guard.
-    pub fn register_circuit(
-        &mut self,
-        name: &str,
-        failure_threshold: u32,
-        timeout_secs: i64,
-    ) {
+    pub fn register_circuit(&mut self, name: &str, failure_threshold: u32, timeout_secs: i64) {
         use crate::rate_limit::CircuitBreakerConfig;
         self.guard.register_circuit(
             name,
@@ -182,9 +171,10 @@ impl BusinessOS {
         reason: &str,
         action: serde_json::Value,
     ) -> &HumanApproval {
-        let approval = self.approvals.request_approval(workflow_id, title, reason, action);
-        self.audit
-            .record_approval_requested(workflow_id, title);
+        let approval = self
+            .approvals
+            .request_approval(workflow_id, title, reason, action);
+        self.audit.record_approval_requested(workflow_id, title);
         approval
     }
 
@@ -196,10 +186,7 @@ impl BusinessOS {
     ) -> Result<&HumanApproval, ApprovalError> {
         let result = self.approvals.approve(approval_id, decided_by, None)?;
         self.audit
-            .record_approval_granted(
-                &result.workflow_id,
-                decided_by,
-            );
+            .record_approval_granted(&result.workflow_id, decided_by);
         Ok(result)
     }
 
@@ -212,11 +199,7 @@ impl BusinessOS {
     ) -> Result<&HumanApproval, ApprovalError> {
         let result = self.approvals.reject(approval_id, decided_by, note)?;
         self.audit
-            .record_approval_rejected(
-                &result.workflow_id,
-                decided_by,
-                note,
-            );
+            .record_approval_rejected(&result.workflow_id, decided_by, note);
         Ok(result)
     }
 
@@ -449,7 +432,9 @@ mod tests {
     fn verify_request_invalid_signature() {
         let os = BusinessOS::new(BusinessOSConfig::default());
         let ts = chrono::Utc::now().timestamp().to_string();
-        let result = os.verify_request("secret", &ts, "body", "v0=badsig").unwrap();
+        let result = os
+            .verify_request("secret", &ts, "body", "v0=badsig")
+            .unwrap();
         assert!(!result);
     }
 

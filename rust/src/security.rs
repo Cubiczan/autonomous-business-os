@@ -3,11 +3,11 @@
 //! This module provides constant-time comparisons, replay-attack protection,
 //! and Slack-compatible request signing.
 
+use crate::types::Secret;
 use chrono::Utc;
 use hmac::{Hmac, Mac};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
-use crate::types::Secret;
 
 type HmacSha256 = Hmac<Sha256>;
 
@@ -137,7 +137,10 @@ impl SecurityService {
         if secret.is_empty() {
             return Err(SecurityError::MissingSecret);
         }
-        let expected = format!("v0={}", Self::compute_hmac_hex(secret, &format!("{}{}", timestamp, body)));
+        let expected = format!(
+            "v0={}",
+            Self::compute_hmac_hex(secret, &format!("{}{}", timestamp, body))
+        );
         Ok(Self::constant_time_eq(&expected, signature))
     }
 
@@ -259,9 +262,13 @@ mod tests {
         let timestamp = "1234567890";
         let body = r#"{"hello": "world"}"#;
         let secret = "webhook-secret";
-        let sig = format!("v0={}", SecurityService::compute_hmac_hex(secret, &format!("{}{}", timestamp, body)));
+        let sig = format!(
+            "v0={}",
+            SecurityService::compute_hmac_hex(secret, &format!("{}{}", timestamp, body))
+        );
         assert_eq!(
-            svc.verify_webhook_signature(secret, timestamp, body, &sig).unwrap(),
+            svc.verify_webhook_signature(secret, timestamp, body, &sig)
+                .unwrap(),
             true
         );
     }
@@ -289,9 +296,16 @@ mod tests {
         let secret = "mysecret";
         let ts = "9999999999";
         let body = "testbody";
-        let computed = format!("v0={}", SecurityService::compute_hmac_hex(secret, &format!("{}{}", ts, body)));
+        let computed = format!(
+            "v0={}",
+            SecurityService::compute_hmac_hex(secret, &format!("{}{}", ts, body))
+        );
         assert!(computed.starts_with("v0="));
-        assert_eq!(svc.verify_webhook_signature(secret, ts, body, &computed).unwrap(), true);
+        assert_eq!(
+            svc.verify_webhook_signature(secret, ts, body, &computed)
+                .unwrap(),
+            true
+        );
     }
 
     #[test]
@@ -300,8 +314,15 @@ mod tests {
         let secret = "sec";
         let ts = "1000";
         let body = "";
-        let sig = format!("v0={}", SecurityService::compute_hmac_hex(secret, &format!("{}{}", ts, body)));
-        assert_eq!(svc.verify_webhook_signature(secret, ts, body, &sig).unwrap(), true);
+        let sig = format!(
+            "v0={}",
+            SecurityService::compute_hmac_hex(secret, &format!("{}{}", ts, body))
+        );
+        assert_eq!(
+            svc.verify_webhook_signature(secret, ts, body, &sig)
+                .unwrap(),
+            true
+        );
     }
 
     // -------------------------------------------------------------------
@@ -374,7 +395,10 @@ mod tests {
         let ts = Utc::now().timestamp().to_string();
         let body = "payload=thing";
         let sig_base = format!("v0:{}:{}", ts, body);
-        let sig = format!("v0={}", SecurityService::compute_hmac_hex("slack-signing-secret", &sig_base));
+        let sig = format!(
+            "v0={}",
+            SecurityService::compute_hmac_hex("slack-signing-secret", &sig_base)
+        );
         assert_eq!(svc.verify_slack_request(&ts, body, &sig).unwrap(), true);
     }
 

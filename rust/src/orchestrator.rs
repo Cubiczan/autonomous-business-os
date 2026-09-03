@@ -46,11 +46,8 @@ pub trait Agent: Send + Sync {
     ///
     /// Receives a reference to the workflow and a mutable context for recording
     /// audit events and spawning sub-tasks.
-    fn run(
-        &self,
-        workflow: &Workflow,
-        ctx: &mut AgentContext,
-    ) -> Result<serde_json::Value, String>;
+    fn run(&self, workflow: &Workflow, ctx: &mut AgentContext)
+        -> Result<serde_json::Value, String>;
 }
 
 /// Context passed to agents during execution.
@@ -248,8 +245,7 @@ impl Orchestrator {
             updated_at: now,
             completed_at: None,
         };
-        self.audit
-            .record_workflow_created(&wf.id, wf.kind, source);
+        self.audit.record_workflow_created(&wf.id, wf.kind, source);
         wf
     }
 
@@ -295,39 +291,38 @@ impl Orchestrator {
             Ok(value) => {
                 // 5. Success path
                 WorkflowStateMachine::mark_completed(workflow, value.clone())?;
-                self.audit
-                    .record_workflow_completed(&workflow.id, &value);
+                self.audit.record_workflow_completed(&workflow.id, &value);
                 Ok(value)
             }
             Err(err_msg) => {
                 // 6. Failure path — first mark the workflow as failed
-                WorkflowStateMachine::mark_failed(
-                    workflow,
-                    format!("agent error: {}", err_msg),
-                )?;
+                WorkflowStateMachine::mark_failed(workflow, format!("agent error: {}", err_msg))?;
 
                 let retry = self.should_retry(workflow);
                 if retry.should_retry {
                     // Reset to Pending so it can be picked up again
                     WorkflowStateMachine::retry(workflow)?;
-                    self.audit
-                        .record_workflow_failed(&workflow.id, &format!("agent failed (will retry): {}", err_msg));
+                    self.audit.record_workflow_failed(
+                        &workflow.id,
+                        &format!("agent failed (will retry): {}", err_msg),
+                    );
                     Err(OrchestratorError::AgentFailed(format!(
                         "agent failed, retrying in {}ms: {}",
                         retry.delay_ms, err_msg
                     )))
                 } else {
                     // No more retries — permanent failure (already marked failed above)
-                    workflow.error = Some(format!("agent failed after {} attempts: {}", workflow.attempts, err_msg));
+                    workflow.error = Some(format!(
+                        "agent failed after {} attempts: {}",
+                        workflow.attempts, err_msg
+                    ));
 
-                    self.audit
-                        .record_workflow_failed(&workflow.id, &err_msg);
-                    self.audit
-                        .record_escalation(
-                            Some(&workflow.id),
-                            Severity::High,
-                            &format!("Workflow {} permanently failed: {}", workflow.id, err_msg),
-                        );
+                    self.audit.record_workflow_failed(&workflow.id, &err_msg);
+                    self.audit.record_escalation(
+                        Some(&workflow.id),
+                        Severity::High,
+                        &format!("Workflow {} permanently failed: {}", workflow.id, err_msg),
+                    );
 
                     Err(OrchestratorError::AgentFailed(err_msg))
                 }
@@ -567,7 +562,10 @@ mod tests {
             Box::new(MockOkAgent::new("v2", serde_json::json!(2))),
         );
         assert_eq!(reg.len(), 1);
-        assert_eq!(reg.get(WorkflowKind::LeadQualification).unwrap().name(), "v2");
+        assert_eq!(
+            reg.get(WorkflowKind::LeadQualification).unwrap().name(),
+            "v2"
+        );
     }
 
     // -----------------------------------------------------------------------
@@ -698,7 +696,11 @@ mod tests {
     #[test]
     fn submit_workflow_records_audit() {
         let mut orc = Orchestrator::new(OrchestratorConfig::default());
-        orc.submit_workflow(WorkflowKind::FinanceOperations, serde_json::json!({}), "api");
+        orc.submit_workflow(
+            WorkflowKind::FinanceOperations,
+            serde_json::json!({}),
+            "api",
+        );
         assert_eq!(orc.audit().len(), 1);
     }
 
@@ -711,7 +713,10 @@ mod tests {
         let mut orc = Orchestrator::new(OrchestratorConfig::default());
         orc = orc.with_agent(
             WorkflowKind::LeadQualification,
-            Box::new(MockOkAgent::new("qualifier", serde_json::json!({"score": 85}))),
+            Box::new(MockOkAgent::new(
+                "qualifier",
+                serde_json::json!({"score": 85}),
+            )),
         );
 
         let mut wf = orc.submit_workflow(
@@ -733,7 +738,11 @@ mod tests {
             Box::new(MockOkAgent::new("a", serde_json::json!("ok"))),
         );
 
-        let mut wf = orc.submit_workflow(WorkflowKind::LeadQualification, serde_json::json!({}), "test");
+        let mut wf = orc.submit_workflow(
+            WorkflowKind::LeadQualification,
+            serde_json::json!({}),
+            "test",
+        );
         let initial_len = orc.audit().len();
         orc.run_workflow(&mut wf).unwrap();
         // Should have: created + started + completed = 3 audit entries
@@ -747,7 +756,11 @@ mod tests {
     #[test]
     fn run_workflow_no_agent_errors() {
         let mut orc = Orchestrator::new(OrchestratorConfig::default());
-        let mut wf = orc.submit_workflow(WorkflowKind::LeadQualification, serde_json::json!({}), "test");
+        let mut wf = orc.submit_workflow(
+            WorkflowKind::LeadQualification,
+            serde_json::json!({}),
+            "test",
+        );
         let err = orc.run_workflow(&mut wf).unwrap_err();
         assert!(matches!(err, OrchestratorError::NoAgent(_)));
     }
@@ -763,7 +776,11 @@ mod tests {
             Box::new(MockFailAgent::new("bad", "connection refused")),
         );
 
-        let mut wf = orc.submit_workflow(WorkflowKind::LeadQualification, serde_json::json!({}), "test");
+        let mut wf = orc.submit_workflow(
+            WorkflowKind::LeadQualification,
+            serde_json::json!({}),
+            "test",
+        );
         let err = orc.run_workflow(&mut wf).unwrap_err();
         assert!(matches!(err, OrchestratorError::AgentFailed(_)));
         // Should be reset to Pending for retry
@@ -782,7 +799,11 @@ mod tests {
             Box::new(MockFailAgent::new("bad", "permanent error")),
         );
 
-        let mut wf = orc.submit_workflow(WorkflowKind::LeadQualification, serde_json::json!({}), "test");
+        let mut wf = orc.submit_workflow(
+            WorkflowKind::LeadQualification,
+            serde_json::json!({}),
+            "test",
+        );
         let err = orc.run_workflow(&mut wf).unwrap_err();
         assert!(matches!(err, OrchestratorError::AgentFailed(_)));
         assert_eq!(wf.status, WorkflowStatus::Failed);
@@ -798,7 +819,11 @@ mod tests {
             Box::new(MockOkAgent::new("a", serde_json::json!("ok"))),
         );
 
-        let mut wf = orc.submit_workflow(WorkflowKind::LeadQualification, serde_json::json!({}), "test");
+        let mut wf = orc.submit_workflow(
+            WorkflowKind::LeadQualification,
+            serde_json::json!({}),
+            "test",
+        );
         // Run once successfully
         orc.run_workflow(&mut wf).unwrap();
         assert_eq!(wf.status, WorkflowStatus::Completed);

@@ -964,7 +964,11 @@ mod tests {
         let result = guard.check("k", Some("svc"));
         assert!(result.is_err());
         let msg = result.unwrap_err();
-        assert!(msg.contains("open"), "expected 'open' in error, got: {}", msg);
+        assert!(
+            msg.contains("open"),
+            "expected 'open' in error, got: {}",
+            msg
+        );
     }
 
     // -----------------------------------------------------------------------

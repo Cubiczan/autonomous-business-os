@@ -7,10 +7,21 @@ use std::collections::{BTreeMap, BTreeSet};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "command", content = "input", rename_all = "snake_case")]
 pub enum BridgeRequest {
-    ScoreLead { lead: Value, enrichment: Value },
-    ClassifyAction { action_type: String, payload: Value },
-    InspectText { text: String, source: String },
-    HashJson { payload: Value },
+    ScoreLead {
+        lead: Value,
+        enrichment: Value,
+    },
+    ClassifyAction {
+        action_type: String,
+        payload: Value,
+    },
+    InspectText {
+        text: String,
+        source: String,
+    },
+    HashJson {
+        payload: Value,
+    },
     DepartmentMetrics {
         department_type: String,
         status: String,
@@ -18,10 +29,20 @@ pub enum BridgeRequest {
         output: Value,
         approval_count: usize,
     },
-    AnalyzeSkillDescription { description: String, name: Option<String> },
-    ResolveSkillSlugs { role: String, department_type: String },
-    SerializeSdkResult { payload: Value },
-    SerializeDepartment { payload: Value },
+    AnalyzeSkillDescription {
+        description: String,
+        name: Option<String>,
+    },
+    ResolveSkillSlugs {
+        role: String,
+        department_type: String,
+    },
+    SerializeSdkResult {
+        payload: Value,
+    },
+    SerializeDepartment {
+        payload: Value,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -70,9 +91,16 @@ pub fn handle_request(request: BridgeRequest) -> BridgeResponse {
     match request {
         BridgeRequest::ScoreLead { lead, enrichment } => {
             let (score, tier, reasons) = score_lead(lead, enrichment);
-            BridgeResponse::LeadScore { score, tier, reasons }
+            BridgeResponse::LeadScore {
+                score,
+                tier,
+                reasons,
+            }
         }
-        BridgeRequest::ClassifyAction { action_type, payload } => {
+        BridgeRequest::ClassifyAction {
+            action_type,
+            payload,
+        } => {
             let (risk_level, requires_approval, reasons) = classify_action(&action_type, &payload);
             BridgeResponse::ActionClassification {
                 risk_level,
@@ -141,7 +169,11 @@ pub fn handle_request(request: BridgeRequest) -> BridgeResponse {
 fn score_lead(lead: Value, enrichment: Value) -> (f64, String, Vec<String>) {
     let mut score: f64 = 0.0;
     let mut reasons = Vec::new();
-    if lead.get("email").and_then(Value::as_str).is_some_and(|value| !value.trim().is_empty()) {
+    if lead
+        .get("email")
+        .and_then(Value::as_str)
+        .is_some_and(|value| !value.trim().is_empty())
+    {
         score += 10.0;
         reasons.push("valid email present".to_string());
     }
@@ -172,12 +204,17 @@ fn score_lead(lead: Value, enrichment: Value) -> (f64, String, Vec<String>) {
     let title = format!(
         "{} {}",
         lead.get("title").and_then(Value::as_str).unwrap_or(""),
-        enrichment.get("title").and_then(Value::as_str).unwrap_or("")
+        enrichment
+            .get("title")
+            .and_then(Value::as_str)
+            .unwrap_or("")
     )
     .to_lowercase();
-    if ["founder", "ceo", "coo", "cto", "vp", "head", "director", "partner", "owner"]
-        .iter()
-        .any(|term| title.contains(term))
+    if [
+        "founder", "ceo", "coo", "cto", "vp", "head", "director", "partner", "owner",
+    ]
+    .iter()
+    .any(|term| title.contains(term))
     {
         score += 20.0;
         reasons.push("decision-maker title".to_string());
@@ -185,12 +222,23 @@ fn score_lead(lead: Value, enrichment: Value) -> (f64, String, Vec<String>) {
     let company_text = format!(
         "{} {}",
         lead.get("company").and_then(Value::as_str).unwrap_or(""),
-        enrichment.get("industry").and_then(Value::as_str).unwrap_or("")
+        enrichment
+            .get("industry")
+            .and_then(Value::as_str)
+            .unwrap_or("")
     )
     .to_lowercase();
-    if ["ai", "software", "saas", "consulting", "agency", "fintech", "health"]
-        .iter()
-        .any(|term| company_text.contains(term))
+    if [
+        "ai",
+        "software",
+        "saas",
+        "consulting",
+        "agency",
+        "fintech",
+        "health",
+    ]
+    .iter()
+    .any(|term| company_text.contains(term))
     {
         score += 15.0;
         reasons.push("target industry fit".to_string());
@@ -252,15 +300,23 @@ fn classify_action(action_type: &str, payload: &Value) -> (String, bool, Vec<Str
     let mut requires_approval = false;
     let mut risk_level = "low".to_string();
 
-    if OUTBOUND_MARKERS.iter().any(|marker| action.contains(marker)) {
+    if OUTBOUND_MARKERS
+        .iter()
+        .any(|marker| action.contains(marker))
+    {
         requires_approval = true;
         risk_level = "high".to_string();
         reasons.push("Outbound communication or publishing requires approval.".to_string());
     }
-    if HIGH_IMPACT_MARKERS.iter().any(|marker| action.contains(marker)) {
+    if HIGH_IMPACT_MARKERS
+        .iter()
+        .any(|marker| action.contains(marker))
+    {
         requires_approval = true;
         risk_level = "critical".to_string();
-        reasons.push("Financial, contractual, destructive, or credential action is blocked.".to_string());
+        reasons.push(
+            "Financial, contractual, destructive, or credential action is blocked.".to_string(),
+        );
     }
     if ["gdpr", "personal data", "contract", "payment"]
         .iter()
@@ -269,7 +325,9 @@ fn classify_action(action_type: &str, payload: &Value) -> (String, bool, Vec<Str
         if risk_level == "low" {
             risk_level = "high".to_string();
         }
-        reasons.push("Sensitive business, legal, financial, or personal-data context detected.".to_string());
+        reasons.push(
+            "Sensitive business, legal, financial, or personal-data context detected.".to_string(),
+        );
     }
     if reasons.is_empty() {
         reasons.push("Low-risk internal action with audit logging.".to_string());
@@ -429,7 +487,10 @@ fn resolve_skill_slugs(role: &str, department_type: &str) -> Vec<String> {
             "pipeline_tracking".to_string(),
         ]);
     }
-    if role_text.contains("content") || role_text.contains("creator") || department_type == "content" {
+    if role_text.contains("content")
+        || role_text.contains("creator")
+        || department_type == "content"
+    {
         slugs.extend([
             "content_strategy".to_string(),
             "content_drafting".to_string(),
@@ -442,11 +503,20 @@ fn resolve_skill_slugs(role: &str, department_type: &str) -> Vec<String> {
     if role_text.contains("newsletter") {
         slugs.insert("newsletter_production".to_string());
     }
-    if role_text.contains("research") || role_text.contains("analyst") || department_type == "intelligence" {
-        slugs.extend(["market_research".to_string(), "analytics_reporting".to_string()]);
+    if role_text.contains("research")
+        || role_text.contains("analyst")
+        || department_type == "intelligence"
+    {
+        slugs.extend([
+            "market_research".to_string(),
+            "analytics_reporting".to_string(),
+        ]);
     }
     if role_text.contains("operations") {
-        slugs.extend(["analytics_reporting".to_string(), "compliance_review".to_string()]);
+        slugs.extend([
+            "analytics_reporting".to_string(),
+            "compliance_review".to_string(),
+        ]);
     }
     if role_text.contains("customer") || role_text.contains("success") {
         slugs.insert("customer_success".to_string());
@@ -538,9 +608,11 @@ fn infer_tools(description: &str) -> Vec<String> {
 
 fn infer_approval_policy(description: &str) -> String {
     let text = description.to_lowercase();
-    if ["send", "publish", "post", "email", "message", "approval", "approve"]
-        .iter()
-        .any(|marker| text.contains(marker))
+    if [
+        "send", "publish", "post", "email", "message", "approval", "approve",
+    ]
+    .iter()
+    .any(|marker| text.contains(marker))
     {
         return "human_approval_required_before_external_action".to_string();
     }
