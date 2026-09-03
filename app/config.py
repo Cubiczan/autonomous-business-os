@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     slack_signing_secret: str | None = Field(default=None, repr=False)
     stripe_webhook_secret: str | None = Field(default=None, repr=False)
     docusign_webhook_secret: str | None = Field(default=None, repr=False)
+    uipath_webhook_secret: str | None = Field(default=None, repr=False)
 
     apollo_api_key: str | None = Field(default=None, repr=False)
     hunter_api_key: str | None = Field(default=None, repr=False)

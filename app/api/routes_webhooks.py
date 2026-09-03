@@ -104,3 +104,25 @@ async def calendar_webhook(request: Request, session: Session = Depends(get_sess
         source="calendar",
     )
     return {"workflow_id": workflow.id, "status": workflow.status.value}
+
+
+@router.post("/uipath")
+async def uipath_webhook(
+    request: Request,
+    x_uipath_signature: str | None = Header(default=None),
+    session: Session = Depends(get_session),
+) -> dict:
+    settings = get_settings()
+    if not verify_shared_secret(x_uipath_signature, settings.uipath_webhook_secret):
+        raise HTTPException(status_code=401, detail="Invalid UiPath signature")
+
+    payload = await request.json()
+    workflow_kind = payload.get("workflow_kind") or "finance_operations"
+    workflow = WorkflowService(session).create(
+        workflow_kind,
+        payload.get("title") or f"UiPath handoff {payload.get('subject', 'unknown')}",
+        payload,
+        source="uipath",
+    )
+    result = MasterOrchestrator(session).run_workflow(workflow)
+    return {"workflow_id": workflow.id, "status": workflow.status.value, "result": result}

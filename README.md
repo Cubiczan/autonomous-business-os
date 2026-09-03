@@ -70,7 +70,7 @@ No API keys needed. No external services. No configuration. Ship → Run → Dem
 | **Lead Qualification** | `lead_qualification` | Apollo, Hunter, CRM, Email | Enrich leads, verify emails, score A/B/C, draft outreach, sync CRM, HITL for Tier A |
 | **Client Onboarding** | `client_onboarding` | Notion, Linear/Jira, Calendar, Slack | Build project plan, create Notion page, create tasks, schedule kickoff, notify team |
 | **Delivery Monitoring** | `delivery_monitoring` | Slack | Detect budget drift, communication gaps, schedule delays, post status, create escalations |
-| **Finance Operations** | `finance_operations` | Stripe, Accounting, Email | Create invoices, check overdue, reconcile payments, weekly summaries, HITL for follow-ups |
+| **Finance Operations** | `finance_operations` | Stripe, Accounting, Email, UiPath | Create invoices, check overdue, reconcile payments, weekly summaries, HITL for follow-ups |
 | **Knowledge & Comms** | `knowledge_communication` | Slack, internal RAG | Ingest meeting summaries, answer knowledge queries, post to Slack |
 
 ### Self-Spawning Departments
@@ -157,6 +157,7 @@ self.approval_service.request(
 | `POST /webhooks/leads` | New lead form submission | Lead Qualification | API key |
 | `POST /webhooks/docusign` | Contract signed | Client Onboarding | DocuSign signature |
 | `POST /webhooks/stripe` | Payment event | Finance Operations | Stripe signature |
+| `POST /webhooks/uipath` | UiPath handoff payload | Finance Operations | Shared secret |
 | `POST /webhooks/slack` | Slack message/event | Knowledge & Comms | HMAC-SHA256 |
 | `POST /webhooks/calendar` | Meeting scheduled | Delivery Monitoring | API key |
 
@@ -383,4 +384,3 @@ This repository is hardened with the [Consensus Hardening Protocol (CHP)](https:
 
 ### CHP Version
 cognitive-mesh-orchestrator 0.1.0 | [Protocol Docs](https://codeberg.org/cubiczan/consensus-hardening-protocol)
-
