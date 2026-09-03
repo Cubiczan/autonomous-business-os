@@ -7,6 +7,7 @@ from app.agents.base import BaseAgent
 from app.models import AgentInstance, AgentRuntimeStatus, Department, DepartmentStatus, Workflow
 from app.services.guardrails import GuardrailService
 from app.services.memory import MemoryService
+from app.rust_core import department_metrics
 
 
 class DynamicDepartmentAgent(BaseAgent):
@@ -45,8 +46,17 @@ class DynamicDepartmentAgent(BaseAgent):
         output = self._generate_department_output(department, workflow.payload, inspection)
         approvals = self._propose_external_actions(department, workflow, output)
         department.last_output = output
-        department.revenue_signals = self._revenue_signals(department, output)
-        department.health_score = self._health_score(department, approvals)
+        metrics = department_metrics(
+            {
+                "department_type": department.department_type,
+                "status": department.status.value,
+                "revenue_signals": department.revenue_signals or {},
+                "output": output,
+                "approval_count": len(approvals),
+            }
+        )
+        department.revenue_signals = metrics["revenue_signals"]
+        department.health_score = metrics["health_score"]
         for agent in agents:
             agent.status = (
                 AgentRuntimeStatus.waiting_for_approval if approvals else AgentRuntimeStatus.idle
@@ -181,23 +191,6 @@ class DynamicDepartmentAgent(BaseAgent):
                     )
                 )
         return proposals
-
-    def _revenue_signals(self, department: Department, output: dict[str, Any]) -> dict[str, Any]:
-        signals = dict(department.revenue_signals or {})
-        if department.department_type == "sales":
-            leads = output.get("leads", [])
-            signals["lead_count"] = signals.get("lead_count", 0) + len(leads)
-            signals["pipeline_value"] = signals.get("pipeline_value", 0) + len(leads) * 5000
-        if department.department_type == "content":
-            drafts = output.get("drafts", [])
-            signals["content_outputs"] = signals.get("content_outputs", 0) + len(drafts)
-        return signals
-
-    def _health_score(self, department: Department, approvals: list[dict[str, Any]]) -> float:
-        score = 0.95 if department.status == DepartmentStatus.active else 0.4
-        if len(approvals) > 10:
-            score -= 0.1
-        return max(0.0, min(1.0, score))
 
     def _content_title(self, channel: str) -> str:
         if channel == "youtube":

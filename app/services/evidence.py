@@ -1,11 +1,10 @@
-import hashlib
-import json
 from typing import Any
 
 from sqlalchemy.orm import Session
 
 from app.models import AgentInstance, AuditAction, EvidencePacket, ExternalAction, Workflow
 from app.services.audit import AuditService
+from app.rust_core import run_abos_core
 
 
 VGA_ATTRIBUTION = (
@@ -84,5 +83,5 @@ class EvidencePacketService:
         return packet
 
     def _hash_json(self, payload: dict[str, Any]) -> str:
-        serialized = json.dumps(payload, sort_keys=True, default=str, separators=(",", ":"))
-        return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+        response = run_abos_core("hash_json", {"payload": payload})
+        return response["value"]["hash"]

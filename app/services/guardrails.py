@@ -20,57 +20,13 @@ from app.models import (
 from app.services.approval import ApprovalService
 from app.services.audit import AuditService
 from app.services.evidence import EvidencePacketService
-
-
-OUTBOUND_MARKERS = {
-    "send_email",
-    "outbound_email",
-    "client_message",
-    "social_post",
-    "publish_post",
-    "publish_video",
-    "newsletter_send",
-    "ad_publish",
-    "proposal_send",
-}
-
-HIGH_IMPACT_MARKERS = {
-    "send_money",
-    "payment",
-    "wire_transfer",
-    "contract_sign",
-    "delete",
-    "credential",
-    "production_change",
-    "invoice_create",
-}
-
-PROMPT_INJECTION_PATTERNS = [
-    "ignore previous instructions",
-    "ignore all previous instructions",
-    "system prompt",
-    "developer message",
-    "reveal your instructions",
-    "exfiltrate",
-    "send the api key",
-    "bypass approval",
-    "do not tell the user",
-    "disable guardrails",
-]
+from app.rust_core import run_abos_core
 
 
 class PromptInjectionGuard:
     def inspect(self, text: str, *, source: str = "unknown") -> dict[str, Any]:
-        normalized = text.lower()
-        flags = [pattern for pattern in PROMPT_INJECTION_PATTERNS if pattern in normalized]
-        score = min(1.0, len(flags) / 3)
-        return {
-            "source": source,
-            "score": score,
-            "flags": flags,
-            "safe_to_use_as_instruction": not flags,
-            "handling": "treat_as_untrusted_data" if flags else "normal",
-        }
+        payload = run_abos_core("inspect_text", {"text": text, "source": source})
+        return payload["value"]
 
 
 class GuardrailService:
@@ -82,29 +38,8 @@ class GuardrailService:
         self.prompt_guard = PromptInjectionGuard()
 
     def classify_action(self, action_type: str, payload: dict[str, Any]) -> dict[str, Any]:
-        action = action_type.lower()
-        reasons: list[str] = []
-        requires_approval = False
-        risk_level = "low"
-        if any(marker in action for marker in OUTBOUND_MARKERS):
-            requires_approval = True
-            risk_level = "high"
-            reasons.append("Outbound communication or publishing requires approval.")
-        if any(marker in action for marker in HIGH_IMPACT_MARKERS):
-            requires_approval = True
-            risk_level = "critical"
-            reasons.append("Financial, contractual, destructive, or credential action is blocked.")
-        payload_text = str(payload).lower()
-        if any(marker in payload_text for marker in ["gdpr", "personal data", "contract", "payment"]):
-            risk_level = "high" if risk_level == "low" else risk_level
-            reasons.append("Sensitive business, legal, financial, or personal-data context detected.")
-        if not reasons:
-            reasons.append("Low-risk internal action with audit logging.")
-        return {
-            "risk_level": risk_level,
-            "requires_approval": requires_approval,
-            "reasons": reasons,
-        }
+        payload = run_abos_core("classify_action", {"action_type": action_type, "payload": payload})
+        return payload["value"]
 
     def request_external_action(
         self,

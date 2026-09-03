@@ -15,6 +15,7 @@ from app.models import (
     SkillStatus,
     utcnow,
 )
+from app.rust_core import analyze_skill_description, resolve_skill_slugs
 from app.services.audit import AuditService
 
 
@@ -187,15 +188,16 @@ class SkillRegistry:
         department_id: str | None = None,
         agent_id: str | None = None,
     ) -> Skill:
-        skill_name = name or self._title_from_description(description)
-        slug = slugify(skill_name)
+        analysis = analyze_skill_description({"description": description, "name": name})
+        skill_name = analysis["skill_name"]
+        slug = analysis["slug"]
         manifest = {
             "slug": slug,
             "name": skill_name,
             "description": description,
-            "tags": self._infer_tags(description),
-            "tool_permissions": self._infer_tools(description),
-            "approval_policy": self._infer_approval_policy(description),
+            "tags": analysis["tags"],
+            "tool_permissions": analysis["tools"],
+            "approval_policy": analysis["approval_policy"],
             "runtime_contract": {
                 "input": "Plain-language task, memory context, allowed tools, and trust level.",
                 "output": "Structured result with proposed actions, citations, risks, and next run.",
@@ -284,7 +286,7 @@ class SkillRegistry:
 
     def assign_relevant_skills(self, agent: AgentInstance, department_type: str) -> list[Skill]:
         self.seed_core_skills()
-        slugs = self._skill_slugs_for_agent(agent.role, department_type)
+        slugs = resolve_skill_slugs({"role": agent.role, "department_type": department_type})
         skills = list(
             self.session.scalars(
                 select(Skill).where(Skill.status == SkillStatus.active, Skill.slug.in_(slugs))

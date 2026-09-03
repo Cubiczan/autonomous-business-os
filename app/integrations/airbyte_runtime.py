@@ -9,6 +9,7 @@ from typing import Any
 from airbyte_agent_sdk import connect
 
 from app.config import Settings, get_settings
+from app.rust_core import serialize_sdk_result as rust_serialize_sdk_result
 
 
 def airbyte_hosted_configured(settings: Settings | None = None) -> bool:
@@ -48,23 +49,23 @@ def serialize_sdk_result(result: Any) -> dict[str, Any]:
             data = payload.get("data")
             if data is not None and set(payload.keys()) <= {"data", "meta", "status", "success"}:
                 if isinstance(data, dict):
-                    return data
+                    return rust_serialize_sdk_result(data)
                 if isinstance(data, list):
-                    return {"items": data, "data": data}
-                return {"data": data}
-        return payload if isinstance(payload, dict) else {"value": payload}
+                    return rust_serialize_sdk_result(data)
+                return rust_serialize_sdk_result({"data": data})
+        return rust_serialize_sdk_result(payload if isinstance(payload, dict) else {"value": payload})
     if hasattr(result, "data"):
         data = result.data
         if hasattr(data, "model_dump"):
-            return data.model_dump(mode="json")
+            return rust_serialize_sdk_result(data.model_dump(mode="json"))
         if isinstance(data, list):
-            return {"items": data, "data": data}
+            return rust_serialize_sdk_result(data)
         if isinstance(data, dict):
-            return data
-        return {"data": data}
+            return rust_serialize_sdk_result(data)
+        return rust_serialize_sdk_result({"data": data})
     if isinstance(result, dict):
-        return result
-    return {"value": result}
+        return rust_serialize_sdk_result(result)
+    return rust_serialize_sdk_result(result)
 
 
 async def _execute_with_connector(

@@ -14,6 +14,7 @@ from app.models import (
     TrustLevel,
     utcnow,
 )
+from app.rust_core import serialize_department as serialize_department_payload
 from app.services.audit import AuditService
 from app.services.skills import SkillRegistry
 
@@ -304,7 +305,7 @@ class DepartmentFactory:
         return department
 
     def serialize_department(self, department: Department) -> dict[str, Any]:
-        return {
+        payload = {
             "id": department.id,
             "name": department.name,
             "department_type": department.department_type,
@@ -342,6 +343,7 @@ class DepartmentFactory:
                 for schedule in department.schedules
             ],
         }
+        return serialize_department_payload(payload)
 
     def _spawn_agent(self, department: Department, spec: dict[str, Any]) -> AgentInstance:
         agent = AgentInstance(

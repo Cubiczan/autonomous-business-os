@@ -11,6 +11,7 @@ from app.models import (
     WorkflowStatus,
 )
 from app.services.departments import DepartmentFactory
+from app.rust_core import department_metrics
 from app.services.skills import SkillRegistry
 from app.services.workflows import WorkflowService
 
@@ -77,3 +78,19 @@ def test_department_operation_creates_approval_gated_external_actions(db_session
     assert all(action.requires_approval for action in actions)
     assert all(packet.status == "waiting_for_approval" for packet in packets)
     assert all("Verifiable Governance Architecture" in packet.attribution for packet in packets)
+
+
+def test_department_metrics_rust_bridge_merges_signals_and_health() -> None:
+    metrics = department_metrics(
+        {
+            "department_type": "sales",
+            "status": "active",
+            "revenue_signals": {"lead_count": 2, "pipeline_value": 10_000},
+            "output": {"leads": [{}, {}]},
+            "approval_count": 3,
+        }
+    )
+
+    assert metrics["health_score"] == 0.95
+    assert metrics["revenue_signals"]["lead_count"] == 4
+    assert metrics["revenue_signals"]["pipeline_value"] == 20_000
