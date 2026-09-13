@@ -7,7 +7,7 @@ jinja2==3.1.6
 llama-cloud>=2.1.0
 prometheus-client==0.21.1
 pydantic==2.12.5
-pydantic-settings==2.13.1
+pydantic-settings==2.14.2
 python-dotenv==1.2.2
 python-multipart==0.0.26
 psycopg2-binary==2.9.12
@@ -16,3 +16,5 @@ structlog==24.4.0
 tenacity==8.5.0
 uvicorn[standard]==0.33.0
 cubiczan-ml>=0.1.0  # CubicZan ML — Rust-powered Python bindings
+
+starlette==1.0.1
