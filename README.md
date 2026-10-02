@@ -10,6 +10,16 @@
 
 ---
 
+<!-- product-screenshots:start -->
+## Product screenshots
+
+Operations dashboard showing workflow metrics, recent workflows, and pending approvals.
+
+![autonomous-business-os product interface](docs/screenshots/dashboard.png)
+
+Existing UI capture stored in this repository; displayed values may be demo or sample data.
+<!-- product-screenshots:end -->
+
 ## What It Does
 
 ABO now combines the original fixed business workflows with a **self-spawning department engine**.
